@@ -45,6 +45,10 @@ export default function Home() {
     board.initCells();
     board.initFigures();
     console.log("This is new board", board.showBoard());
+
+    board.consoleBoard();
+
+
     setShatraBoard(board);
   }, []);
 
