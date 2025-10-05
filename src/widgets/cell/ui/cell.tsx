@@ -2,8 +2,7 @@ import { Field } from "@/entities/field";
 import { FigureLogo } from "@/entities/figure";
 import { Colors } from "@/shatra-core/src/config/Colors";
 import { Figures } from "@/shatra-core/src/config/Figures";
-import { Layer as KonvaLayer } from 'konva/lib/Layer';
-import { RefObject } from "react";
+import { KonvaEventObject } from "konva/lib/Node";
 
 
 type CellWidgetProps = {
@@ -13,7 +12,23 @@ type CellWidgetProps = {
   color: Colors,
   figureColor: Colors | undefined,
   figure: Figures | null | undefined,
-  tempLayerRef: RefObject<KonvaLayer | null>,
+  handleDragStart: (e: KonvaEventObject<DragEvent>) => void,
+  handleDragEnd: (e: KonvaEventObject<DragEvent>) => void
+};
+
+
+const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {
+  const stage = e.target.getStage();
+  if (stage && stage.container()) {
+    stage.container().style.cursor = 'grab';
+  }
+};
+const handleMouseOut = (e: KonvaEventObject<MouseEvent>) => {
+
+  const stage = e.target.getStage();
+  if (stage && stage.container()) {
+    stage.container().style.cursor = 'default';
+  }
 };
 
 const CellWidget: React.FC<CellWidgetProps> = ({
@@ -23,8 +38,12 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   color,
   figureColor,
   figure,
-  tempLayerRef
+  handleDragStart,
+  handleDragEnd
 }) => {
+
+
+
   return (
     <Field
       id={id}
@@ -33,7 +52,14 @@ const CellWidget: React.FC<CellWidgetProps> = ({
       color={color}
 
     >
-      <FigureLogo color={figureColor} figure={figure} tempLayerRef={tempLayerRef} />
+      <FigureLogo
+        color={figureColor}
+        figure={figure}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onMouseOver={handleMouseOver}
+        onMouseOut={handleMouseOut}
+      />
     </Field>
   );
 };

@@ -21,8 +21,8 @@ const Field: React.FC<FieldProps> = ({ id, x, y, color, children }) => {
         width={40}
         height={40}
         fill={color}
-        shadowColor="gray"
-        shadowBlur={10}
+      // shadowColor="gray"
+      // shadowBlur={10}
       />
       <Text
         x={2}

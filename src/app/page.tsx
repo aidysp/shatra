@@ -7,6 +7,8 @@ import { Layer as KonvaLayer } from 'konva/lib/Layer';
 
 import { Board } from "@/shatra-core/src";
 import { CellWidget } from '@/widgets/cell';
+import { KonvaEventObject } from 'konva/lib/Node';
+import { Figure } from '@/shatra-core/src/Figures/Figure';
 
 
 
@@ -52,7 +54,53 @@ export default function Home() {
     setShatraBoard(board);
   }, []);
 
+  interface DraggedPiece {
+    cellId: number;
+    figure: Figure | null | undefined;
+    originalX: number;
+    originalY: number;
+  }
 
+
+  const [draggedPiece, setDraggedPiece] = useState<DraggedPiece | null>(null);
+
+
+  const createDragStartHandler = (cellId: number, figure: Figure | null | undefined, x: number, y: number) => {
+    return (e: KonvaEventObject<DragEvent>) => {
+      const stage = e.target.getStage();
+      if (stage && stage.container()) {
+        stage.container().style.cursor = 'grabbing';
+      }
+
+      const shape = e.target;
+      if (tempLayerRef.current) {
+        shape.moveTo(tempLayerRef.current);
+      }
+
+      setDraggedPiece({ cellId, figure, originalX: x * 40 + 5, originalY: y * 40 + 5 });
+    }
+  }
+
+
+  const handleDragEnd = (e: KonvaEventObject<MouseEvent>) => {
+    const stage = e.target.getStage();
+    if (stage && stage.container()) {
+      stage.container().style.cursor = 'grab';
+    }
+
+    const shape = e.target;
+    const mainLayer = shape.getLayer()?.getParent()?.findOne('Layer');
+    if (mainLayer) {
+      shape.moveTo(mainLayer);
+    }
+
+    if (draggedPiece) {
+      e.target.position({
+        x: draggedPiece.originalX,
+        y: draggedPiece.originalY
+      });
+    }
+  };
 
   return (
     <div className="">
@@ -63,7 +111,17 @@ export default function Home() {
             <Layer>
               {
                 shatraBoard.cells.map(cell => {
-                  return <CellWidget key={cell.id} id={cell.id} x={cell.x} y={cell.y} color={cell.color} figureColor={cell.figure?.color} figure={cell.figure?.logo} tempLayerRef={tempLayerRef} />
+                  return <CellWidget
+                    key={cell.id}
+                    id={cell.id}
+                    x={cell.x}
+                    y={cell.y}
+                    color={cell.color}
+                    figureColor={cell.figure?.color}
+                    figure={cell.figure?.logo}
+                    handleDragStart={createDragStartHandler(cell.id, cell.figure, cell.x, cell.y)}
+                    handleDragEnd={handleDragEnd}
+                  />
                 })
               }
             </Layer>

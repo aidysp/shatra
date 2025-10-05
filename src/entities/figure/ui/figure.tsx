@@ -1,16 +1,19 @@
-import { KonvaEventObject } from 'konva/lib/Node';
 import { Colors } from "@/shatra-core/src/config/Colors";
 import { Figures } from "@/shatra-core/src/config/Figures";
-import React, { RefObject } from "react";
-import { Layer as KonvaLayer } from 'konva/lib/Layer';
+import { KonvaEventObject } from "konva/lib/Node";
+import React from "react";
 import { Image } from "react-konva";
 import useImage from "use-image";
+
 
 
 type FigureProps = {
   color: Colors | undefined;
   figure: Figures | null | undefined;
-  tempLayerRef: RefObject<KonvaLayer | null>,
+  onDragStart: (e: KonvaEventObject<DragEvent>) => void;
+  onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  onMouseOver: (e: KonvaEventObject<MouseEvent>) => void;
+  onMouseOut: (e: KonvaEventObject<MouseEvent>) => void;
 }
 
 
@@ -27,51 +30,17 @@ const whiteBaatyr = `<svg width="46" height="46" viewBox="0 0 46 46" fill="none"
 const blackBaatyr = `<svg width="46" height="46" viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg" > <path d="M11.4998 6.3889C11.4998 7.0197 11.6013 7.62663 11.7888 8.1943L10.5273 8.78604C9.48155 7.70203 8.01385 7.0278 6.38867 7.0278C3.21303 7.0278 0.638672 9.60216 0.638672 12.7778C0.638672 15.6086 2.68426 17.9616 5.37789 18.4392L8.40756 28.8267C8.4708 29.0435 8.56251 29.251 8.68029 29.4437L10.4264 32.3011L10.4157 32.303C9.19501 32.5189 8.30534 33.5798 8.30534 34.8195V39.6111C8.30534 41.0225 9.4495 42.1667 10.8609 42.1667L35.1878 42.1667C35.8656 42.1667 36.5156 41.8974 36.9949 41.4182C37.4741 40.9389 37.7434 40.2889 37.7434 39.6111V34.8195C37.7434 33.5784 36.8517 32.5167 35.6293 32.3023L35.5779 32.2933L37.3193 29.4437C37.4371 29.251 37.5288 29.0435 37.592 28.8267L40.6217 18.4392C43.3153 17.9616 45.3609 15.6086 45.3609 12.7778C45.3609 9.60216 42.7865 7.0278 39.6109 7.0278C37.9837 7.0278 36.5143 7.70373 35.4683 8.79013L34.2091 8.19945C34.3977 7.6303 34.4998 7.02161 34.4998 6.3889C34.4998 3.21326 31.9254 0.638901 28.7498 0.638901C25.5741 0.638901 22.9998 3.21326 22.9998 6.3889C22.9998 3.21326 20.4254 0.638901 17.2498 0.638901C14.0741 0.638901 11.4998 3.21326 11.4998 6.3889Z" fill="#F4F7FA" /> <path d="M18.3966 9.37135C19.5943 8.91055 20.4443 7.74898 20.4443 6.38889C20.4443 4.62464 19.0141 3.19444 17.2499 3.19444C15.4857 3.19444 14.0554 4.62464 14.0554 6.38889C14.0554 8.01924 15.2768 9.36433 16.8545 9.5591L15.4299 21.0833L8.56241 15.1187C9.19035 14.5354 9.58323 13.7025 9.58323 12.7778C9.58323 11.0135 8.15302 9.58334 6.38878 9.58334C4.62454 9.58334 3.19434 11.0135 3.19434 12.7778C3.19434 14.542 4.62454 15.9722 6.38878 15.9722C6.69935 15.9722 6.99957 15.9279 7.28346 15.8452L10.861 28.1111L14.5606 34.165L10.861 34.8194V39.6111L35.1879 39.6111V34.8194L31.4409 34.1623L35.1388 28.1111L38.7163 15.8452C39.0002 15.9279 39.3004 15.9722 39.611 15.9722C41.3753 15.9722 42.8055 14.542 42.8055 12.7778C42.8055 11.0135 41.3753 9.58334 39.611 9.58334C37.8468 9.58334 36.4166 11.0135 36.4166 12.7778C36.4166 13.7025 36.8094 14.5354 37.4374 15.1187L30.5699 21.0833L29.1453 9.5591C30.723 9.36433 31.9443 8.01924 31.9443 6.38889C31.9443 4.62464 30.5141 3.19444 28.7499 3.19444C26.9857 3.19444 25.5554 4.62464 25.5554 6.38889C25.5554 7.74898 26.4055 8.91055 27.6032 9.37135L22.9999 19.8056L18.3966 9.37135Z" fill="#34364C" /> </svg>`;
 
 
-const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {
-  const stage = e.target.getStage();
-  if (stage && stage.container()) {
-    stage.container().style.cursor = 'grab';
-  }
-};
-const handleMouseOut = (e: KonvaEventObject<MouseEvent>) => {
-
-  const stage = e.target.getStage();
-  if (stage && stage.container()) {
-    stage.container().style.cursor = 'default';
-  }
-};
 
 
-const FigureLogo: React.FC<FigureProps> = ({ color, figure, tempLayerRef }) => {
+const FigureLogo: React.FC<FigureProps> = ({
+  color,
+  figure,
+  onDragStart,
+  onDragEnd,
+  onMouseOver,
+  onMouseOut
+}) => {
 
-
-
-  const handleDragStart = (e: KonvaEventObject<MouseEvent>) => {
-    const stage = e.target.getStage();
-    if (stage && stage.container()) {
-      stage.container().style.cursor = 'grabbing';
-    }
-
-    const shape = e.target;
-    if (tempLayerRef.current) {
-      shape.moveTo(tempLayerRef.current);
-    }
-
-  };
-
-  const handleDragEnd = (e: KonvaEventObject<MouseEvent>) => {
-    const stage = e.target.getStage();
-    if (stage && stage.container()) {
-      stage.container().style.cursor = 'grab';
-    }
-
-    const shape = e.target;
-    const mainLayer = shape.getLayer()?.getParent()?.findOne('Layer');
-    if (mainLayer) {
-      shape.moveTo(mainLayer);
-    }
-
-  };
 
 
   const figureRef = React.useRef(null);
@@ -101,10 +70,10 @@ const FigureLogo: React.FC<FigureProps> = ({ color, figure, tempLayerRef }) => {
       height={30}
       alt={`${color}-${figure}`}
       ref={figureRef}
-      onMouseOver={handleMouseOver}
-      onMouseOut={handleMouseOut}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onMouseOver={onMouseOver}
+      onMouseOut={onMouseOut}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       draggable
     />
   );
