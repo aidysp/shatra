@@ -5,18 +5,6 @@ import { Figures } from "@/shatra-core/src/config/Figures";
 import { KonvaEventObject } from "konva/lib/Node";
 
 
-type CellWidgetProps = {
-  id: number,
-  x: number,
-  y: number,
-  color: Colors,
-  figureColor: Colors | undefined,
-  figure: Figures | null | undefined,
-  handleDragStart: (e: KonvaEventObject<DragEvent>) => void,
-  handleDragEnd: (e: KonvaEventObject<DragEvent>) => void,
-  handleDragMove: (e: KonvaEventObject<DragEvent>) => void
-};
-
 
 const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {
   const stage = e.target.getStage();
@@ -32,6 +20,21 @@ const handleMouseOut = (e: KonvaEventObject<MouseEvent>) => {
   }
 };
 
+type CellWidgetProps = {
+  id: number,
+  x: number,
+  y: number,
+  color: Colors,
+  figureColor: Colors | undefined,
+  figure: Figures | null | undefined,
+  handleDragStart: (e: KonvaEventObject<DragEvent>) => void,
+  handleDragEnd: (e: KonvaEventObject<DragEvent>) => void,
+  handleDragMove: (e: KonvaEventObject<DragEvent>) => void,
+  isAvailableMove: boolean;
+  isHovered?: boolean;
+};
+
+
 const CellWidget: React.FC<CellWidgetProps> = ({
   id,
   x,
@@ -41,7 +44,10 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   figure,
   handleDragStart,
   handleDragEnd,
-  handleDragMove
+  isAvailableMove,
+  handleDragMove,
+  isHovered
+
 }) => {
 
 
@@ -52,7 +58,8 @@ const CellWidget: React.FC<CellWidgetProps> = ({
       x={x}
       y={y}
       color={color}
-
+      isAvailableMove={isAvailableMove}
+      isHovered={isHovered}
     >
       <FigureLogo
         color={figureColor}
