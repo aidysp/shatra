@@ -13,7 +13,8 @@ type CellWidgetProps = {
   figureColor: Colors | undefined,
   figure: Figures | null | undefined,
   handleDragStart: (e: KonvaEventObject<DragEvent>) => void,
-  handleDragEnd: (e: KonvaEventObject<DragEvent>) => void
+  handleDragEnd: (e: KonvaEventObject<DragEvent>) => void,
+  handleDragMove: (e: KonvaEventObject<DragEvent>) => void
 };
 
 
@@ -39,7 +40,8 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   figureColor,
   figure,
   handleDragStart,
-  handleDragEnd
+  handleDragEnd,
+  handleDragMove
 }) => {
 
 
@@ -57,6 +59,7 @@ const CellWidget: React.FC<CellWidgetProps> = ({
         figure={figure}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragMove={handleDragMove}
         onMouseOver={handleMouseOver}
         onMouseOut={handleMouseOut}
       />

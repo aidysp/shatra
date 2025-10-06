@@ -14,6 +14,7 @@ type FigureProps = {
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
   onMouseOver: (e: KonvaEventObject<MouseEvent>) => void;
   onMouseOut: (e: KonvaEventObject<MouseEvent>) => void;
+  onDragMove: (e: KonvaEventObject<DragEvent>) => void;
 }
 
 
@@ -38,7 +39,8 @@ const FigureLogo: React.FC<FigureProps> = ({
   onDragStart,
   onDragEnd,
   onMouseOver,
-  onMouseOut
+  onMouseOut,
+  onDragMove
 }) => {
 
 
@@ -74,6 +76,7 @@ const FigureLogo: React.FC<FigureProps> = ({
       onMouseOut={onMouseOut}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onDragMove={onDragMove}
       draggable
     />
   );

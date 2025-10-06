@@ -9,8 +9,7 @@ import { Board } from "@/shatra-core/src";
 import { CellWidget } from '@/widgets/cell';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { Figure } from '@/shatra-core/src/Figures/Figure';
-
-
+import { Cell } from '@/shatra-core/src/Cell';
 
 
 export default function Home() {
@@ -84,6 +83,10 @@ export default function Home() {
 
   const handleDragEnd = (e: KonvaEventObject<MouseEvent>) => {
     const stage = e.target.getStage();
+    if (!stage) return;
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+
     if (stage && stage.container()) {
       stage.container().style.cursor = 'grab';
     }
@@ -94,13 +97,68 @@ export default function Home() {
       shape.moveTo(mainLayer);
     }
 
-    if (draggedPiece) {
+
+
+    const nearestCell = findNearestCell(pos.x, pos.y);
+
+    if (!draggedPiece) {
+      e.target.position({ x: 5, y: 5 });
+      setDraggedPiece(null);
+      return;
+    }
+
+    if (nearestCell) {
+      e.target.position({
+        x: nearestCell.x * 40 + 5,
+        y: nearestCell.y * 40 + 5
+      });
+    } else {
       e.target.position({
         x: draggedPiece.originalX,
         y: draggedPiece.originalY
       });
     }
+
+
+    setDraggedPiece(null);
   };
+
+  const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
+    const stage = e.target.getStage();
+    const pos = stage?.getPointerPosition();
+
+    if (!pos) return;
+
+    const nearestCell = findNearestCell(pos.x, pos.y);
+
+    if (nearestCell) {
+      const newX = nearestCell.x * 40 + 5;
+      const newY = nearestCell.y * 40 + 5;
+
+      e.target.position({ x: newX, y: newY })
+    }
+  }
+
+
+
+  const findNearestCell = (x: number, y: number): Cell | null => {
+    let nearestCell: Cell | null = null;
+    let minDistance = Infinity;
+
+    shatraBoard.cells.forEach(cell => {
+      const cellCenterX = cell.x * 40 + 5;
+      const cellCenterY = cell.y * 40 + 5;
+      const distance = Math.sqrt(Math.pow(x - cellCenterX, 2) + Math.pow(y - cellCenterY, 2));
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestCell = cell;
+      }
+    });
+
+    return nearestCell;
+  }
+
 
   return (
     <div className="">
@@ -121,6 +179,7 @@ export default function Home() {
                     figure={cell.figure?.logo}
                     handleDragStart={createDragStartHandler(cell.id, cell.figure, cell.x, cell.y)}
                     handleDragEnd={handleDragEnd}
+                    handleDragMove={handleDragMove}
                   />
                 })
               }
