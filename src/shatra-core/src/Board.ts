@@ -44,8 +44,64 @@ export class Board {
         })
     }
 
-    public moveTo(from: Cell, to: Cell) {
+    public clone(): Board {
+        const newBoard = new Board();
+        newBoard.cells = this.cells.map(cell =>
+            new Cell(cell.id, cell.x, cell.y, cell.color, cell.figure)
+        );
+        return newBoard;
+    }
+
+    public getCell(x: number, y: number): Cell | null {
+        return this.cells.find(cell => cell.x === x && cell.y === y) || null;
+    }
+
+    public getCellById(id: number): Cell | null {
+        return this.cells.find(cell => cell.id === id) || null;
+    }
+
+    public makeMove(from: Cell, to: Cell): boolean {
+        if (!this.isValidMove(from, to)) {
+            return false;
+        }
+
         to.figure = from.figure;
+        from.figure = null;
+        return true;
+    }
+
+    isValidMove(from: Cell, to: Cell): boolean {
+        if (!from.figure) return false;
+        if (from === to) return false;
+
+        if (to.figure !== null) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    public getAvailableMoves(from: Cell): Cell[] {
+        if (!from.figure) return [];
+
+        const availableMoves: Cell[] = [];
+
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                if (dx === 0 && dy === 0) continue;
+
+                const targetX = from.x + dx;
+                const targetY = from.y + dy;
+                const targetCell = this.getCell(targetX, targetY);
+
+                if (targetCell && this.isValidMove(from, targetCell)) {
+                    availableMoves.push(targetCell);
+                }
+            }
+        }
+
+        return availableMoves;
     }
 
 }

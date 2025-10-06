@@ -62,6 +62,29 @@ export default function Home() {
 
 
   const [draggedPiece, setDraggedPiece] = useState<DraggedPiece | null>(null);
+  const [availableMoves, setAvailableMoves] = useState<number[]>([]);
+  const [hoveredCell, setHoveredCell] = useState<number | null>(null);
+
+
+
+  const findNearestCell = (x: number, y: number): Cell | null => {
+    let nearestCell: Cell | null = null;
+    let minDistance = Infinity;
+    const MAGNET_THRESHOLD = 30;
+
+    shatraBoard.cells.forEach(cell => {
+      const cellCenterX = cell.x * 40 + 20;
+      const cellCenterY = cell.y * 40 + 20;
+      const distance = Math.sqrt(Math.pow(x - cellCenterX, 2) + Math.pow(y - cellCenterY, 2));
+
+      if (distance < minDistance && distance < MAGNET_THRESHOLD) {
+        minDistance = distance;
+        nearestCell = cell;
+      }
+    });
+
+    return nearestCell;
+  }
 
 
   const createDragStartHandler = (cellId: number, figure: Figure | null | undefined, x: number, y: number) => {
@@ -77,51 +100,15 @@ export default function Home() {
       }
 
       setDraggedPiece({ cellId, figure, originalX: x * 40 + 5, originalY: y * 40 + 5 });
+
+
+      const fromCell = shatraBoard.getCellById(cellId);
+      if (fromCell && fromCell.figure) {
+        const moves = shatraBoard.getAvailableMoves(fromCell);
+        setAvailableMoves(moves.map(cell => cell.id));
+      }
     }
   }
-
-
-  const handleDragEnd = (e: KonvaEventObject<MouseEvent>) => {
-    const stage = e.target.getStage();
-    if (!stage) return;
-    const pos = stage.getPointerPosition();
-    if (!pos) return;
-
-    if (stage && stage.container()) {
-      stage.container().style.cursor = 'grab';
-    }
-
-    const shape = e.target;
-    const mainLayer = shape.getLayer()?.getParent()?.findOne('Layer');
-    if (mainLayer) {
-      shape.moveTo(mainLayer);
-    }
-
-
-
-    const nearestCell = findNearestCell(pos.x, pos.y);
-
-    if (!draggedPiece) {
-      e.target.position({ x: 5, y: 5 });
-      setDraggedPiece(null);
-      return;
-    }
-
-    if (nearestCell) {
-      e.target.position({
-        x: nearestCell.x * 40 + 5,
-        y: nearestCell.y * 40 + 5
-      });
-    } else {
-      e.target.position({
-        x: draggedPiece.originalX,
-        y: draggedPiece.originalY
-      });
-    }
-
-
-    setDraggedPiece(null);
-  };
 
   const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
     const stage = e.target.getStage();
@@ -131,33 +118,74 @@ export default function Home() {
 
     const nearestCell = findNearestCell(pos.x, pos.y);
 
-    if (nearestCell) {
-      const newX = nearestCell.x * 40 + 5;
-      const newY = nearestCell.y * 40 + 5;
 
-      e.target.position({ x: newX, y: newY })
+    if (nearestCell && availableMoves.includes(nearestCell.id)) {
+      setHoveredCell(nearestCell.id);
+    } else {
+      setHoveredCell(null);
     }
   }
 
 
 
-  const findNearestCell = (x: number, y: number): Cell | null => {
-    let nearestCell: Cell | null = null;
-    let minDistance = Infinity;
+  const handleDragEnd = (e: KonvaEventObject<MouseEvent>) => {
+    const stage = e.target.getStage();
+    if (!stage) return;
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
 
-    shatraBoard.cells.forEach(cell => {
-      const cellCenterX = cell.x * 40 + 5;
-      const cellCenterY = cell.y * 40 + 5;
-      const distance = Math.sqrt(Math.pow(x - cellCenterX, 2) + Math.pow(y - cellCenterY, 2));
 
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestCell = cell;
+    if (stage.container()) {
+      stage.container().style.cursor = 'grab';
+    }
+
+
+    const shape = e.target;
+    const mainLayer = shape.getLayer()?.getParent()?.findOne('Layer');
+    if (mainLayer) {
+      shape.moveTo(mainLayer);
+    }
+
+
+    if (!draggedPiece) {
+      e.target.position({ x: 5, y: 5 });
+      return;
+    }
+
+    const nearestCell = findNearestCell(pos.x, pos.y);
+
+
+
+    if (nearestCell && availableMoves.includes(nearestCell.id)) {
+      const fromCell = shatraBoard.getCellById(draggedPiece.cellId);
+      const toCell = nearestCell;
+
+      if (fromCell && shatraBoard.makeMove(fromCell, toCell)) {
+        e.target.position({
+          x: nearestCell.x * 40 + 5,
+          y: nearestCell.y * 40 + 5
+        });
+
+        setShatraBoard(shatraBoard.clone());
+        console.log("Ход выполнен успешно!");
+      } else {
+        e.target.position({
+          x: draggedPiece.originalX,
+          y: draggedPiece.originalY
+        });
+        console.log("Неверный ход!");
       }
-    });
+    } else {
+      e.target.position({
+        x: draggedPiece.originalX,
+        y: draggedPiece.originalY
+      });
+    }
 
-    return nearestCell;
-  }
+    setHoveredCell(null);
+    setAvailableMoves([]);
+    setDraggedPiece(null);
+  };
 
 
   return (
@@ -180,6 +208,8 @@ export default function Home() {
                     handleDragStart={createDragStartHandler(cell.id, cell.figure, cell.x, cell.y)}
                     handleDragEnd={handleDragEnd}
                     handleDragMove={handleDragMove}
+                    isAvailableMove={availableMoves.includes(cell.id)}
+                    isHovered={hoveredCell === cell.id}
                   />
                 })
               }
