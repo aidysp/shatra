@@ -23,6 +23,7 @@ const Field: React.FC<FieldProps> = ({ id, x, y, color, children }) => {
         fill={color}
       // shadowColor="gray"
       // shadowBlur={10}
+      // shadowOpacity={0.6}
       />
       <Text
         x={2}
