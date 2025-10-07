@@ -21,17 +21,20 @@ const handleMouseOut = (e: KonvaEventObject<MouseEvent>) => {
 };
 
 type CellWidgetProps = {
-  id: number,
-  x: number,
-  y: number,
-  color: Colors,
-  figureColor: Colors | undefined,
-  figure: Figures | null | undefined,
-  handleDragStart: (e: KonvaEventObject<DragEvent>) => void,
-  handleDragEnd: (e: KonvaEventObject<DragEvent>) => void,
-  handleDragMove: (e: KonvaEventObject<DragEvent>) => void,
+  id: number;
+  x: number;
+  y: number;
+  color: Colors;
+  figureColor: Colors | undefined;
+  figure: Figures | null | undefined;
+  handleDragStart: (e: KonvaEventObject<DragEvent>) => void;
+  handleDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  handleDragMove: (e: KonvaEventObject<DragEvent>) => void;
+  onMouseMove?: (e: KonvaEventObject<MouseEvent>) => void;
   isAvailableMove: boolean;
   isHovered?: boolean;
+  isSelected?: boolean;
+  onClick?: () => void;
 };
 
 
@@ -46,11 +49,11 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   handleDragEnd,
   isAvailableMove,
   handleDragMove,
-  isHovered
-
+  onMouseMove,
+  isHovered,
+  isSelected,
+  onClick,
 }) => {
-
-
 
   return (
     <Field
@@ -60,16 +63,22 @@ const CellWidget: React.FC<CellWidgetProps> = ({
       color={color}
       isAvailableMove={isAvailableMove}
       isHovered={isHovered}
+      isSelected={isSelected}
+      onClick={onClick}
+      onMouseMove={onMouseMove}
     >
-      <FigureLogo
-        color={figureColor}
-        figure={figure}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragMove={handleDragMove}
-        onMouseOver={handleMouseOver}
-        onMouseOut={handleMouseOut}
-      />
+      {
+        figure && figureColor && (
+          <FigureLogo
+            color={figureColor}
+            figure={figure}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragMove={handleDragMove}
+            onMouseOver={handleMouseOver}
+            onMouseOut={handleMouseOut}
+          />
+        )}
     </Field>
   );
 };

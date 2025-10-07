@@ -67,6 +67,7 @@ export class Board {
 
         to.figure = from.figure;
         from.figure = null;
+
         return true;
     }
 

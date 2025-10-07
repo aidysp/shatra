@@ -1,6 +1,7 @@
 'use client'
 
 import { Colors } from '@/shatra-core/src/config/Colors';
+import { KonvaEventObject } from 'konva/lib/Node';
 import React from 'react';
 import { Circle, Group, Rect, Text } from 'react-konva';
 
@@ -12,11 +13,19 @@ interface FieldProps {
   children: React.ReactNode;
   isAvailableMove?: boolean;
   isHovered?: boolean;
+  isSelected?: boolean;
+  onClick?: () => void;
+  onMouseMove?: (e: KonvaEventObject<MouseEvent>) => void;
 }
 
-const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMove, isHovered }) => {
+const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMove, isHovered, onClick, onMouseMove }) => {
   return (
-    <Group x={x * 40} y={y * 40}>
+    <Group
+      x={x * 40}
+      y={y * 40}
+      onClick={onClick}
+      onMouseMove={onMouseMove}
+    >
       <Rect
         x={0}
         y={0}

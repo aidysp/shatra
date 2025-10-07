@@ -1,10 +1,11 @@
 import { Colors } from "@/shatra-core/src/config/Colors";
 import { Figures } from "@/shatra-core/src/config/Figures";
+import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
 import { Image } from "react-konva";
 import useImage from "use-image";
-
+import { Figure } from '@/shatra-core/src/Figures/Figure';
 
 
 type FigureProps = {
@@ -15,6 +16,7 @@ type FigureProps = {
   onMouseOver: (e: KonvaEventObject<MouseEvent>) => void;
   onMouseOut: (e: KonvaEventObject<MouseEvent>) => void;
   onDragMove: (e: KonvaEventObject<DragEvent>) => void;
+
 }
 
 
@@ -40,7 +42,7 @@ const FigureLogo: React.FC<FigureProps> = ({
   onDragEnd,
   onMouseOver,
   onMouseOut,
-  onDragMove
+  onDragMove,
 }) => {
 
 
@@ -60,6 +62,7 @@ const FigureLogo: React.FC<FigureProps> = ({
 
   const url = svgToURL(currentFigure);
   const [image] = useImage(url);
+
 
   if (!image) return null;
 
@@ -82,4 +85,86 @@ const FigureLogo: React.FC<FigureProps> = ({
   );
 };
 
-export { FigureLogo };
+
+
+interface AnimatedFigureProps {
+  figure: Figure;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  duration: number;
+}
+
+const AnimatedFigure: React.FC<AnimatedFigureProps> = ({
+  figure,
+  fromX,
+  fromY,
+  toX,
+  toY,
+  duration
+}) => {
+  const imageRef = React.useRef<Konva.Image>(null);
+  const [currentPos, setCurrentPos] = React.useState({ x: fromX, y: fromY });
+
+  React.useEffect(() => {
+    const startTime = Date.now();
+
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+      const newX = fromX + (toX - fromX) * easeProgress;
+      const newY = fromY + (toY - fromY) * easeProgress;
+
+      setCurrentPos({ x: newX, y: newY });
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [fromX, fromY, toX, toY, duration]);
+
+
+  const svgToURL = (s: string) => {
+    const uri = window.btoa(unescape(encodeURIComponent(s)));
+    return "data:image/svg+xml;base64," + uri;
+  };
+
+  const figureMap = new Map([
+    [`${Figures.Baatyr}-${Colors.BLACK}`, blackBaatyr],
+    [`${Figures.Baatyr}-${Colors.WHITE}`, whiteBaatyr],
+    [`${Figures.Shatra}-${Colors.BLACK}`, blackShatra],
+    [`${Figures.Shatra}-${Colors.WHITE}`, whiteShatra],
+    [`${Figures.Biy}-${Colors.BLACK}`, blackBiy],
+    [`${Figures.Biy}-${Colors.WHITE}`, whiteBiy]
+  ]);
+
+  const currentFigureSvg = figureMap.get(`${figure.logo}-${figure.color}`) || '';
+  const url = svgToURL(currentFigureSvg);
+  const [image] = useImage(url);
+
+  if (!image) return null;
+
+  return (
+    <Image
+      ref={imageRef}
+      image={image}
+      x={currentPos.x}
+      y={currentPos.y}
+      width={30}
+      height={30}
+      alt={`animated-${figure.color}-${figure.logo}`}
+    />
+  );
+};
+
+export { FigureLogo, AnimatedFigure };
+
+

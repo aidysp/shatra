@@ -10,6 +10,7 @@ import { CellWidget } from '@/widgets/cell';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { Figure } from '@/shatra-core/src/Figures/Figure';
 import { Cell } from '@/shatra-core/src/Cell';
+import { AnimatedFigure } from '@/entities/figure';
 
 
 export default function Home() {
@@ -45,11 +46,7 @@ export default function Home() {
     const board = new Board();
     board.initCells();
     board.initFigures();
-    console.log("This is new board", board.showBoard());
-
     board.consoleBoard();
-
-
     setShatraBoard(board);
   }, []);
 
@@ -64,6 +61,13 @@ export default function Home() {
   const [draggedPiece, setDraggedPiece] = useState<DraggedPiece | null>(null);
   const [availableMoves, setAvailableMoves] = useState<number[]>([]);
   const [hoveredCell, setHoveredCell] = useState<number | null>(null);
+  const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
+
+  const [animatingFigure, setAnimatingFigure] = useState<{
+    figure: Figure;
+    fromCell: Cell;
+    toCell: Cell;
+  } | null>(null);
 
 
 
@@ -85,6 +89,86 @@ export default function Home() {
 
     return nearestCell;
   }
+
+  const performMoveWithAnimation = (from: Cell, to: Cell) => {
+    if (!shatraBoard.isValidMove(from, to)) {
+      return;
+    }
+
+
+    const animatingFigure = {
+      figure: from.figure!,
+      fromCell: from,
+      toCell: to
+    };
+
+    setAnimatingFigure(animatingFigure);
+
+    setAvailableMoves([]);
+    setSelectedCell(null);
+
+
+    const boardCopy = shatraBoard.clone();
+    const fromCellCopy = boardCopy.getCellById(from.id);
+
+
+    if (fromCellCopy && fromCellCopy.figure) {
+      fromCellCopy.figure = null;
+    }
+
+    setShatraBoard(boardCopy);
+
+
+    setTimeout(() => {
+      shatraBoard.makeMove(from, to);
+      setShatraBoard(shatraBoard.clone());
+      setAnimatingFigure(null);
+    }, 300);
+  };
+
+
+
+  const handleCellClick = (cell: Cell) => {
+    if (selectedCell?.id === cell.id) {
+      return;
+    }
+
+    if (!selectedCell && cell.figure) {
+
+      setSelectedCell(cell);
+
+      const moves = shatraBoard.getAvailableMoves(cell);
+      setAvailableMoves(moves.map(c => c.id));
+    }
+
+    else if (selectedCell && availableMoves.includes(cell.id)) {
+
+      performMoveWithAnimation(selectedCell, cell);
+    }
+
+    else {
+      setSelectedCell(null);
+      setAvailableMoves([]);
+    }
+  };
+
+  const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
+
+    if (!selectedCell) return;
+
+    const stage = e.target.getStage();
+    const pos = stage?.getPointerPosition();
+
+    if (!pos) return;
+
+    const nearestCell = findNearestCell(pos.x, pos.y);
+
+    if (nearestCell && availableMoves.includes(nearestCell.id)) {
+      setHoveredCell(nearestCell.id);
+    } else {
+      setHoveredCell(null);
+    }
+  };
 
 
   const createDragStartHandler = (cellId: number, figure: Figure | null | undefined, x: number, y: number) => {
@@ -134,7 +218,6 @@ export default function Home() {
     const pos = stage.getPointerPosition();
     if (!pos) return;
 
-
     if (stage.container()) {
       stage.container().style.cursor = 'grab';
     }
@@ -154,66 +237,122 @@ export default function Home() {
 
     const nearestCell = findNearestCell(pos.x, pos.y);
 
-
-
     if (nearestCell && availableMoves.includes(nearestCell.id)) {
       const fromCell = shatraBoard.getCellById(draggedPiece.cellId);
       const toCell = nearestCell;
 
       if (fromCell && shatraBoard.makeMove(fromCell, toCell)) {
+
         e.target.position({
           x: nearestCell.x * 40 + 5,
           y: nearestCell.y * 40 + 5
         });
 
         setShatraBoard(shatraBoard.clone());
-        console.log("Ход выполнен успешно!");
-      } else {
-        e.target.position({
-          x: draggedPiece.originalX,
-          y: draggedPiece.originalY
-        });
-        console.log("Неверный ход!");
+
+        setHoveredCell(null);
+        setAvailableMoves([]);
+        setDraggedPiece(null);
+        setSelectedCell(null);
+        return;
       }
-    } else {
-      e.target.position({
-        x: draggedPiece.originalX,
-        y: draggedPiece.originalY
-      });
     }
+
+    e.target.position({
+      x: draggedPiece.originalX,
+      y: draggedPiece.originalY
+    });
 
     setHoveredCell(null);
     setAvailableMoves([]);
     setDraggedPiece(null);
+    setSelectedCell(null);
   };
 
+  const animationLayerRef = useRef<KonvaLayer>(null);
+
+
+
+  const renderAnimatedFigure = () => {
+    if (!animatingFigure) return null;
+
+    const { fromCell, toCell, figure } = animatingFigure;
+
+    const fromX = fromCell.x * 40 + 5;
+    const fromY = fromCell.y * 40 + 5;
+    const toX = toCell.x * 40 + 5;
+    const toY = toCell.y * 40 + 5;
+
+    return (
+      <AnimatedFigure
+        key={`animated-${fromCell.id}-${toCell.id}`}
+        figure={figure}
+        fromX={fromX}
+        fromY={fromY}
+        toX={toX}
+        toY={toY}
+        duration={300}
+      />
+    );
+  };
+
+
+  const handleStageClick = (e: KonvaEventObject<MouseEvent>) => {
+    const stage = e.target.getStage();
+    if (!stage) return;
+
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+
+
+    const clickedCell = findNearestCell(pos.x, pos.y);
+    if (!clickedCell) return;
+    handleCellClick(clickedCell);
+  };
 
   return (
     <div className="">
 
       <div className='flex justify-center items-center w-[100%] h-[100vh]'>
         <div className='w-[280px] h-[560px] max-w-[100%] max-h-[100%]  overflow-hidden'>
-          <Stage key={`${windowSize.width}-${windowSize.height}`} width={280} height={560}  >
+          <Stage
+            key={`${windowSize.width}-${windowSize.height}`}
+            width={280}
+            height={560}
+            onClick={handleStageClick}
+          >
             <Layer>
               {
                 shatraBoard.cells.map(cell => {
+
+                  const shouldShowFigure = !animatingFigure ||
+                    animatingFigure.fromCell.id !== cell.id;
+
                   return <CellWidget
                     key={cell.id}
                     id={cell.id}
                     x={cell.x}
                     y={cell.y}
                     color={cell.color}
-                    figureColor={cell.figure?.color}
-                    figure={cell.figure?.logo}
+                    figureColor={shouldShowFigure ? cell.figure?.color : undefined}
+                    figure={shouldShowFigure ? cell.figure?.logo : null}
                     handleDragStart={createDragStartHandler(cell.id, cell.figure, cell.x, cell.y)}
                     handleDragEnd={handleDragEnd}
                     handleDragMove={handleDragMove}
+                    onMouseMove={handleMouseMove}
                     isAvailableMove={availableMoves.includes(cell.id)}
                     isHovered={hoveredCell === cell.id}
+                    isSelected={selectedCell?.id === cell.id}
                   />
                 })
               }
             </Layer>
+
+
+            <Layer ref={animationLayerRef}>
+              {renderAnimatedFigure()}
+            </Layer>
+
             <Layer ref={tempLayerRef} />
           </Stage>
         </div>
