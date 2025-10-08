@@ -35,6 +35,10 @@ type CellWidgetProps = {
   isHovered?: boolean;
   isSelected?: boolean;
   onClick?: () => void;
+
+  isAnimating?: boolean;
+  targetX?: number;
+  targetY?: number;
 };
 
 
@@ -53,7 +57,12 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   isHovered,
   isSelected,
   onClick,
+  isAnimating,
+  targetX,
+  targetY
 }) => {
+
+
 
   return (
     <Field
@@ -72,6 +81,11 @@ const CellWidget: React.FC<CellWidgetProps> = ({
           <FigureLogo
             color={figureColor}
             figure={figure}
+            isAnimating={isAnimating}
+            targetX={targetX}
+            targetY={targetY}
+            cellX={x}
+            cellY={y}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragMove={handleDragMove}

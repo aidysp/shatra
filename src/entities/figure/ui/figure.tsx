@@ -5,7 +5,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
 import { Image } from "react-konva";
 import useImage from "use-image";
-import { Figure } from '@/shatra-core/src/Figures/Figure';
+
 
 
 type FigureProps = {
@@ -16,7 +16,11 @@ type FigureProps = {
   onMouseOver: (e: KonvaEventObject<MouseEvent>) => void;
   onMouseOut: (e: KonvaEventObject<MouseEvent>) => void;
   onDragMove: (e: KonvaEventObject<DragEvent>) => void;
-
+  isAnimating?: boolean;
+  targetX?: number;
+  targetY?: number;
+  cellX: number;
+  cellY: number;
 }
 
 
@@ -43,11 +47,49 @@ const FigureLogo: React.FC<FigureProps> = ({
   onMouseOver,
   onMouseOut,
   onDragMove,
+  isAnimating = false,
+  targetX,
+  targetY,
+  cellX,
+  cellY,
+
 }) => {
 
 
 
-  const figureRef = React.useRef(null);
+  const figureRef = React.useRef<Konva.Image>(null);
+
+
+  React.useEffect(() => {
+    if (isAnimating && figureRef.current && targetX !== undefined && targetY !== undefined) {
+
+      const stage = figureRef.current.getStage();
+
+      if (stage) {
+        const tempLayer = stage.findOne('#temp-layer');
+
+        if (tempLayer) {
+          figureRef.current.moveTo(tempLayer);
+        }
+      }
+
+      const absoluteX = cellX * 40 + 5;
+      const absoluteY = cellY * 40 + 5;
+
+
+
+
+      figureRef.current.position({ x: absoluteX, y: absoluteY });
+
+      figureRef.current.to({
+        x: targetX,
+        y: targetY,
+        duration: 0.3,
+        easing: Konva.Easings.EaseInOut
+      });
+    }
+  }, [isAnimating, targetX, targetY, figure, cellX, cellY]);
+
 
   const figureMap = new Map([
     [`${Figures.Baatyr}-${Colors.BLACK}`, blackBaatyr],
@@ -57,6 +99,8 @@ const FigureLogo: React.FC<FigureProps> = ({
     [`${Figures.Biy}-${Colors.BLACK}`, blackBiy],
     [`${Figures.Biy}-${Colors.WHITE}`, whiteBiy]
   ]);
+
+
 
   const currentFigure = figureMap.get(`${figure}-${color}`) || '';
 
@@ -86,85 +130,6 @@ const FigureLogo: React.FC<FigureProps> = ({
 };
 
 
-
-interface AnimatedFigureProps {
-  figure: Figure;
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-  duration: number;
-}
-
-const AnimatedFigure: React.FC<AnimatedFigureProps> = ({
-  figure,
-  fromX,
-  fromY,
-  toX,
-  toY,
-  duration
-}) => {
-  const imageRef = React.useRef<Konva.Image>(null);
-  const [currentPos, setCurrentPos] = React.useState({ x: fromX, y: fromY });
-
-  React.useEffect(() => {
-    const startTime = Date.now();
-
-    const animate = () => {
-      const now = Date.now();
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-
-      const easeProgress = 1 - Math.pow(1 - progress, 3);
-
-      const newX = fromX + (toX - fromX) * easeProgress;
-      const newY = fromY + (toY - fromY) * easeProgress;
-
-      setCurrentPos({ x: newX, y: newY });
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  }, [fromX, fromY, toX, toY, duration]);
-
-
-  const svgToURL = (s: string) => {
-    const uri = window.btoa(unescape(encodeURIComponent(s)));
-    return "data:image/svg+xml;base64," + uri;
-  };
-
-  const figureMap = new Map([
-    [`${Figures.Baatyr}-${Colors.BLACK}`, blackBaatyr],
-    [`${Figures.Baatyr}-${Colors.WHITE}`, whiteBaatyr],
-    [`${Figures.Shatra}-${Colors.BLACK}`, blackShatra],
-    [`${Figures.Shatra}-${Colors.WHITE}`, whiteShatra],
-    [`${Figures.Biy}-${Colors.BLACK}`, blackBiy],
-    [`${Figures.Biy}-${Colors.WHITE}`, whiteBiy]
-  ]);
-
-  const currentFigureSvg = figureMap.get(`${figure.logo}-${figure.color}`) || '';
-  const url = svgToURL(currentFigureSvg);
-  const [image] = useImage(url);
-
-  if (!image) return null;
-
-  return (
-    <Image
-      ref={imageRef}
-      image={image}
-      x={currentPos.x}
-      y={currentPos.y}
-      width={30}
-      height={30}
-      alt={`animated-${figure.color}-${figure.logo}`}
-    />
-  );
-};
-
-export { FigureLogo, AnimatedFigure };
+export { FigureLogo };
 
 

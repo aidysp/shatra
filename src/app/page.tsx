@@ -3,14 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stage, Layer } from "react-konva";
 import { Layer as KonvaLayer } from 'konva/lib/Layer';
-
-
 import { Board } from "@/shatra-core/src";
 import { CellWidget } from '@/widgets/cell';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { Figure } from '@/shatra-core/src/Figures/Figure';
 import { Cell } from '@/shatra-core/src/Cell';
-import { AnimatedFigure } from '@/entities/figure';
 
 
 export default function Home() {
@@ -90,7 +87,9 @@ export default function Home() {
     return nearestCell;
   }
 
+
   const performMoveWithAnimation = (from: Cell, to: Cell) => {
+
     if (!shatraBoard.isValidMove(from, to)) {
       return;
     }
@@ -103,20 +102,8 @@ export default function Home() {
     };
 
     setAnimatingFigure(animatingFigure);
-
     setAvailableMoves([]);
     setSelectedCell(null);
-
-
-    const boardCopy = shatraBoard.clone();
-    const fromCellCopy = boardCopy.getCellById(from.id);
-
-
-    if (fromCellCopy && fromCellCopy.figure) {
-      fromCellCopy.figure = null;
-    }
-
-    setShatraBoard(boardCopy);
 
 
     setTimeout(() => {
@@ -269,32 +256,6 @@ export default function Home() {
     setSelectedCell(null);
   };
 
-  const animationLayerRef = useRef<KonvaLayer>(null);
-
-
-
-  const renderAnimatedFigure = () => {
-    if (!animatingFigure) return null;
-
-    const { fromCell, toCell, figure } = animatingFigure;
-
-    const fromX = fromCell.x * 40 + 5;
-    const fromY = fromCell.y * 40 + 5;
-    const toX = toCell.x * 40 + 5;
-    const toY = toCell.y * 40 + 5;
-
-    return (
-      <AnimatedFigure
-        key={`animated-${fromCell.id}-${toCell.id}`}
-        figure={figure}
-        fromX={fromX}
-        fromY={fromY}
-        toX={toX}
-        toY={toY}
-        duration={300}
-      />
-    );
-  };
 
 
   const handleStageClick = (e: KonvaEventObject<MouseEvent>) => {
@@ -324,9 +285,14 @@ export default function Home() {
             <Layer>
               {
                 shatraBoard.cells.map(cell => {
+                  const isAnimating = animatingFigure?.fromCell.id === cell.id;
 
-                  const shouldShowFigure = !animatingFigure ||
-                    animatingFigure.fromCell.id !== cell.id;
+                  const targetPos = isAnimating ? {
+                    targetX: animatingFigure.toCell.x * 40 + 5,
+                    targetY: animatingFigure.toCell.y * 40 + 5
+                  } : {};
+
+
 
                   return <CellWidget
                     key={cell.id}
@@ -334,8 +300,8 @@ export default function Home() {
                     x={cell.x}
                     y={cell.y}
                     color={cell.color}
-                    figureColor={shouldShowFigure ? cell.figure?.color : undefined}
-                    figure={shouldShowFigure ? cell.figure?.logo : null}
+                    figureColor={cell.figure?.color}
+                    figure={cell.figure?.logo}
                     handleDragStart={createDragStartHandler(cell.id, cell.figure, cell.x, cell.y)}
                     handleDragEnd={handleDragEnd}
                     handleDragMove={handleDragMove}
@@ -343,17 +309,15 @@ export default function Home() {
                     isAvailableMove={availableMoves.includes(cell.id)}
                     isHovered={hoveredCell === cell.id}
                     isSelected={selectedCell?.id === cell.id}
+                    isAnimating={isAnimating}
+                    {...targetPos}
                   />
                 })
               }
             </Layer>
 
 
-            <Layer ref={animationLayerRef}>
-              {renderAnimatedFigure()}
-            </Layer>
-
-            <Layer ref={tempLayerRef} />
+            <Layer ref={tempLayerRef} id="temp-layer" />
           </Stage>
         </div>
       </div>
