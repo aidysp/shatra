@@ -106,14 +106,6 @@ export default function Home() {
     setAnimatingFigure(animatingFigure);
     setAvailableMoves([]);
     setSelectedCell(null);
-
-
-    // ***
-    // setTimeout(() => {
-    //   shatraBoard.makeMove(from, to);
-    //   setShatraBoard(shatraBoard.clone());
-    //   setAnimatingFigure(null);
-    // }, 300);
   };
 
 
@@ -181,6 +173,7 @@ export default function Home() {
         shape.moveTo(tempLayerRef.current);
       }
 
+
       setDraggedPiece({ cellId, figure, originalX: x * 40 + 5, originalY: y * 40 + 5 });
 
 
@@ -229,7 +222,7 @@ export default function Home() {
 
 
     if (!draggedPiece) {
-      e.target.position({ x: 5, y: 5 });
+      // e.target.position({ x: 5, y: 5 });
       return;
     }
 
