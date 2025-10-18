@@ -8,6 +8,7 @@ import { CellWidget } from '@/widgets/cell';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { Figure } from '@/shatra-core/src/Figures/Figure';
 import { Cell } from '@/shatra-core/src/Cell';
+import { flushSync } from 'react-dom';
 
 
 export default function Home() {
@@ -121,16 +122,24 @@ export default function Home() {
     setAnimatingFigure(animatingFigure);
     setAvailableMoves([]);
     setSelectedCell(null);
-  };
+  }
 
 
   const handleAnimationComplete = () => {
-    if (animatingFigure) {
+    if (!animatingFigure) return;
+
+
+
+    flushSync(() => {
       shatraBoard.makeMove(animatingFigure.fromCell, animatingFigure.toCell);
       setShatraBoard(shatraBoard.clone());
-      playMoveSound();
       setAnimatingFigure(null);
-    }
+    });
+
+    setShatraBoard(shatraBoard.clone());
+    setAnimatingFigure(null);
+    playMoveSound();
+
   }
 
 
@@ -292,6 +301,8 @@ export default function Home() {
     if (!clickedCell) return;
     handleCellClick(clickedCell);
   };
+
+
 
   return (
     <div className="">
