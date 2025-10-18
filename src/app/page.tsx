@@ -21,6 +21,21 @@ export default function Home() {
 
   const tempLayerRef = useRef<KonvaLayer>(null);
 
+  const moveSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    moveSoundRef.current = new Audio('/sounds/move_sound.mp3');
+  }, []);
+
+  const playMoveSound = () => {
+    if (moveSoundRef.current) {
+      moveSoundRef.current.currentTime = 0;
+      moveSoundRef.current.play().catch(error => {
+        console.log('Autoplay sound is blocked:', error);
+      });
+    }
+  };
+
 
   useEffect(() => {
     setWindowSize({
@@ -113,6 +128,7 @@ export default function Home() {
     if (animatingFigure) {
       shatraBoard.makeMove(animatingFigure.fromCell, animatingFigure.toCell);
       setShatraBoard(shatraBoard.clone());
+      playMoveSound();
       setAnimatingFigure(null);
     }
   }
@@ -240,6 +256,8 @@ export default function Home() {
         });
 
         setShatraBoard(shatraBoard.clone());
+        playMoveSound();
+
 
         setHoveredCell(null);
         setAvailableMoves([]);
