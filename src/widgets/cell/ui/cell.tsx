@@ -39,6 +39,7 @@ type CellWidgetProps = {
   isAnimating?: boolean;
   targetX?: number;
   targetY?: number;
+  onAnimationComplete?: () => void;
 };
 
 
@@ -59,7 +60,8 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   onClick,
   isAnimating,
   targetX,
-  targetY
+  targetY,
+  onAnimationComplete
 }) => {
 
 
@@ -91,6 +93,7 @@ const CellWidget: React.FC<CellWidgetProps> = ({
             onDragMove={handleDragMove}
             onMouseOver={handleMouseOver}
             onMouseOut={handleMouseOut}
+            onAnimationComplete={onAnimationComplete}
           />
         )}
     </Field>

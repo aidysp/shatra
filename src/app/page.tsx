@@ -21,6 +21,7 @@ export default function Home() {
 
   const tempLayerRef = useRef<KonvaLayer>(null);
 
+
   useEffect(() => {
     setWindowSize({
       width: window.innerWidth,
@@ -88,6 +89,7 @@ export default function Home() {
   }
 
 
+
   const performMoveWithAnimation = (from: Cell, to: Cell) => {
 
     if (!shatraBoard.isValidMove(from, to)) {
@@ -106,13 +108,22 @@ export default function Home() {
     setSelectedCell(null);
 
 
-    setTimeout(() => {
-      shatraBoard.makeMove(from, to);
-      setShatraBoard(shatraBoard.clone());
-      setAnimatingFigure(null);
-    }, 300);
+    // ***
+    // setTimeout(() => {
+    //   shatraBoard.makeMove(from, to);
+    //   setShatraBoard(shatraBoard.clone());
+    //   setAnimatingFigure(null);
+    // }, 300);
   };
 
+
+  const handleAnimationComplete = () => {
+    if (animatingFigure) {
+      shatraBoard.makeMove(animatingFigure.fromCell, animatingFigure.toCell);
+      setShatraBoard(shatraBoard.clone());
+      setAnimatingFigure(null);
+    }
+  }
 
 
   const handleCellClick = (cell: Cell) => {
@@ -310,6 +321,7 @@ export default function Home() {
                     isHovered={hoveredCell === cell.id}
                     isSelected={selectedCell?.id === cell.id}
                     isAnimating={isAnimating}
+                    onAnimationComplete={handleAnimationComplete}
                     {...targetPos}
                   />
                 })

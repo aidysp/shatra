@@ -21,6 +21,7 @@ type FigureProps = {
   targetY?: number;
   cellX: number;
   cellY: number;
+  onAnimationComplete?: () => void;
 }
 
 
@@ -52,7 +53,7 @@ const FigureLogo: React.FC<FigureProps> = ({
   targetY,
   cellX,
   cellY,
-
+  onAnimationComplete,
 }) => {
 
 
@@ -84,11 +85,14 @@ const FigureLogo: React.FC<FigureProps> = ({
       figureRef.current.to({
         x: targetX,
         y: targetY,
-        duration: 0.3,
-        easing: Konva.Easings.EaseInOut
+        duration: 0.2,
+        easing: Konva.Easings.EaseInOut,
+        onFinish: () => {
+          onAnimationComplete?.()
+        }
       });
     }
-  }, [isAnimating, targetX, targetY, figure, cellX, cellY]);
+  }, [onAnimationComplete, isAnimating, targetX, targetY, figure, cellX, cellY]);
 
 
   const figureMap = new Map([
