@@ -9,10 +9,10 @@ export class BoardVisualizer {
         console.log('=== ДОСКА ШАТРА ===');
         console.log(`Вид для: ${forPlayer === Colors.BLACK ? 'ЧЕРНЫХ (снизу)' : 'БЕЛЫХ (снизу)'}`);
 
-        // Определяем порядок строк в зависимости от игрока
+
         const rowOrder = forPlayer === Colors.BLACK
-            ? Array.from({ length: 14 }, (_, i) => i) // Черные видят снизу (Y=0-13)
-            : Array.from({ length: 14 }, (_, i) => 13 - i); // Белые видят снизу (Y=13-0)
+            ? Array.from({ length: 14 }, (_, i) => i)
+            : Array.from({ length: 14 }, (_, i) => 13 - i);
 
         for (const y of rowOrder) {
             let row = `Y=${y.toString().padStart(2)}: `;
@@ -23,7 +23,7 @@ export class BoardVisualizer {
                 if (!cell) {
                     row += '[ ] ';
                 } else if (cell.figure instanceof Shatra) {
-                    // Для черных: B снизу, W сверху. Для белых: наоборот
+
                     const symbol = cell.figure.color === Colors.BLACK ? 'B' : 'W';
                     row += `[${symbol}] `;
                 } else if (cell.figure instanceof Biy) {
@@ -43,12 +43,12 @@ export class BoardVisualizer {
         console.log('Легенда: [B] - твоя шатра, [W] - вражеская шатра, [K] - твой бий, [Q] - вражеский бий');
     }
 
-    // Метод для отображения с белыми снизу
+
     static printBoardForWhite(board: Board): void {
         this.printBoard(board, Colors.WHITE);
     }
 
-    // Метод для отображения с черными снизу (по умолчанию)
+
     static printBoardForBlack(board: Board): void {
         this.printBoard(board, Colors.BLACK);
     }
