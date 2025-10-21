@@ -9,6 +9,7 @@ import { KonvaEventObject } from 'konva/lib/Node';
 import { Figure } from '@/shatra-core/src/Figures/Figure';
 import { Cell } from '@/shatra-core/src/Cell';
 import { flushSync } from 'react-dom';
+import { Colors } from '@/shatra-core/src/config/Colors';
 
 
 export default function Home() {
@@ -60,7 +61,6 @@ export default function Home() {
     const board = new Board();
     board.initCells();
     board.initFigures();
-    board.consoleBoard();
     setShatraBoard(board);
   }, []);
 
@@ -147,6 +147,7 @@ export default function Home() {
     if (selectedCell?.id === cell.id) {
       return;
     }
+
 
     if (!selectedCell && cell.figure) {
 

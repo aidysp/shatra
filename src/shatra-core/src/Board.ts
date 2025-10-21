@@ -32,17 +32,6 @@ export class Board {
     }
 
 
-    public showBoard() {
-        console.log(this.cells);
-        return this.cells;
-    }
-
-    public consoleBoard() {
-
-        this.cells.forEach((e) => {
-            console.log(e.figure);
-        })
-    }
 
     public clone(): Board {
         const newBoard = new Board();
@@ -75,6 +64,11 @@ export class Board {
         if (!from.figure) return false;
         if (from === to) return false;
 
+
+        if (!from.figure.canMove(from, to)) {
+            return false;
+        }
+
         if (to.figure !== null) {
             return false;
         }
@@ -87,20 +81,16 @@ export class Board {
         if (!from.figure) return [];
 
         const availableMoves: Cell[] = [];
+        const possibleCoords = from.figure.getPossibleMoves(from);
 
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                if (dx === 0 && dy === 0) continue;
 
-                const targetX = from.x + dx;
-                const targetY = from.y + dy;
-                const targetCell = this.getCell(targetX, targetY);
-
-                if (targetCell && this.isValidMove(from, targetCell)) {
-                    availableMoves.push(targetCell);
-                }
+        possibleCoords.forEach(coord => {
+            const targetCell = this.getCell(coord.x, coord.y);
+            if (targetCell && this.isValidMove(from, targetCell)) {
+                availableMoves.push(targetCell);
             }
-        }
+        });
+
 
         return availableMoves;
     }

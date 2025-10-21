@@ -4,7 +4,7 @@ import { Colors } from "../config/Colors";
 import { Figures } from "../config/Figures";
 
 
-export class Figure {
+export abstract class Figure {
     id: string;
     color: Colors;
     logo: Figures | null
@@ -15,8 +15,7 @@ export class Figure {
         this.logo = null;
     }
 
+    abstract canMove(from: Cell, to: Cell): boolean;
 
-    canMove(from: Cell, to: Cell): boolean {
-        return to !== null && from != to;
-    }
+    abstract getPossibleMoves(from: Cell): { x: number, y: number }[];
 }
