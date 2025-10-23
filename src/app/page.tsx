@@ -10,6 +10,8 @@ import { Figure } from '@/shatra-core/src/Figures/Figure';
 import { Cell } from '@/shatra-core/src/Cell';
 import { flushSync } from 'react-dom';
 import { Colors } from '@/shatra-core/src/config/Colors';
+import { BoardVisualizer } from '@/shatra-core/src/utils/BoardVisualizer';
+import { Shatra } from '@/shatra-core/src/Figures/Shatra';
 
 
 export default function Home() {
@@ -61,6 +63,9 @@ export default function Home() {
     const board = new Board();
     board.initCells();
     board.initFigures();
+    // board.setFigure(52, new Shatra("White_Shatra", Player.WHITE));
+    // BoardVisualizer.printBoard(board, Colors.BLACK);
+    board.printCells();
     setShatraBoard(board);
   }, []);
 
@@ -90,7 +95,7 @@ export default function Home() {
     let minDistance = Infinity;
     const MAGNET_THRESHOLD = 30;
 
-    shatraBoard.cells.forEach(cell => {
+    shatraBoard.getCells.forEach(cell => {
       const cellCenterX = cell.x * 40 + 20;
       const cellCenterY = cell.y * 40 + 20;
       const distance = Math.sqrt(Math.pow(x - cellCenterX, 2) + Math.pow(y - cellCenterY, 2));
@@ -318,7 +323,7 @@ export default function Home() {
           >
             <Layer>
               {
-                shatraBoard.cells.map(cell => {
+                shatraBoard.getCells.map(cell => {
                   const isAnimating = animatingFigure?.fromCell.id === cell.id;
 
                   const targetPos = isAnimating ? {

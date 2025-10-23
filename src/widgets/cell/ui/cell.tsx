@@ -2,6 +2,7 @@ import { Field } from "@/entities/field";
 import { FigureLogo } from "@/entities/figure";
 import { Colors } from "@/shatra-core/src/config/Colors";
 import { Figures } from "@/shatra-core/src/config/Figures";
+import { Player } from "@/shatra-core/src/config/Player";
 import { KonvaEventObject } from "konva/lib/Node";
 
 
@@ -25,7 +26,7 @@ type CellWidgetProps = {
   x: number;
   y: number;
   color: Colors;
-  figureColor: Colors | undefined;
+  figureColor: Player | undefined;
   figure: Figures | null | undefined;
   handleDragStart: (e: KonvaEventObject<DragEvent>) => void;
   handleDragEnd: (e: KonvaEventObject<DragEvent>) => void;

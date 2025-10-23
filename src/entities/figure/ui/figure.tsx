@@ -1,5 +1,5 @@
-import { Colors } from "@/shatra-core/src/config/Colors";
 import { Figures } from "@/shatra-core/src/config/Figures";
+import { Player } from "@/shatra-core/src/config/Player";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
@@ -9,7 +9,7 @@ import useImage from "use-image";
 
 
 type FigureProps = {
-  color: Colors | undefined;
+  color: Player | undefined;
   figure: Figures | null | undefined;
   onDragStart: (e: KonvaEventObject<DragEvent>) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
@@ -96,12 +96,12 @@ const FigureLogo: React.FC<FigureProps> = ({
 
 
   const figureMap = new Map([
-    [`${Figures.Baatyr}-${Colors.BLACK}`, blackBaatyr],
-    [`${Figures.Baatyr}-${Colors.WHITE}`, whiteBaatyr],
-    [`${Figures.Shatra}-${Colors.BLACK}`, blackShatra],
-    [`${Figures.Shatra}-${Colors.WHITE}`, whiteShatra],
-    [`${Figures.Biy}-${Colors.BLACK}`, blackBiy],
-    [`${Figures.Biy}-${Colors.WHITE}`, whiteBiy]
+    [`${Figures.Baatyr}-${Player.BLACK}`, blackBaatyr],
+    [`${Figures.Baatyr}-${Player.WHITE}`, whiteBaatyr],
+    [`${Figures.Shatra}-${Player.BLACK}`, blackShatra],
+    [`${Figures.Shatra}-${Player.WHITE}`, whiteShatra],
+    [`${Figures.Biy}-${Player.BLACK}`, blackBiy],
+    [`${Figures.Biy}-${Player.WHITE}`, whiteBiy]
   ]);
 
 

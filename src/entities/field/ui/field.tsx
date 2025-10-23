@@ -68,7 +68,7 @@ const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMov
         fontStyle='bold'
         text={`${id}`}
         fill={Colors.COORDINATE}
-        opacity={0}
+        opacity={0.5}
       />
       {children}
     </Group>
