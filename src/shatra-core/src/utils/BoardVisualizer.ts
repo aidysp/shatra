@@ -1,16 +1,16 @@
 // src/utils/BoardVisualizer.ts
 import { Board } from "../Board";
-import { Colors } from "../config/Colors";
 import { Shatra } from "../Figures/Shatra";
-import { Biy } from "../Figures/Biy";
+// import { Biy } from "../Figures/Biy";
+import { Player } from "../config/Player";
 
 export class BoardVisualizer {
-    static printBoard(board: Board, forPlayer: Colors = Colors.BLACK): void {
+    static printBoard(board: Board, forPlayer: Player = Player.BLACK): void {
         console.log('=== ДОСКА ШАТРА ===');
-        console.log(`Вид для: ${forPlayer === Colors.BLACK ? 'ЧЕРНЫХ (снизу)' : 'БЕЛЫХ (снизу)'}`);
+        console.log(`Вид для: ${forPlayer === Player.BLACK ? 'ЧЕРНЫХ (снизу)' : 'БЕЛЫХ (снизу)'}`);
 
 
-        const rowOrder = forPlayer === Colors.BLACK
+        const rowOrder = forPlayer === Player.BLACK
             ? Array.from({ length: 14 }, (_, i) => i)
             : Array.from({ length: 14 }, (_, i) => 13 - i);
 
@@ -24,12 +24,14 @@ export class BoardVisualizer {
                     row += '[ ] ';
                 } else if (cell.figure instanceof Shatra) {
 
-                    const symbol = cell.figure.color === Colors.BLACK ? 'B' : 'W';
+                    const symbol = cell.figure.color === Player.BLACK ? 'B' : 'W';
                     row += `[${symbol}] `;
-                } else if (cell.figure instanceof Biy) {
-                    const symbol = cell.figure.color === Colors.BLACK ? 'K' : 'Q';
-                    row += `[${symbol}] `;
-                } else if (cell.figure === null) {
+                }
+                // else if (cell.figure instanceof Biy) {
+                // const symbol = cell.figure.color === Player.BLACK ? 'K' : 'Q';
+                // row += `[${symbol}] `;
+                // } 
+                else if (cell.figure === null) {
                     row += '[•] ';
                 } else {
                     row += '[?] ';
@@ -45,11 +47,11 @@ export class BoardVisualizer {
 
 
     static printBoardForWhite(board: Board): void {
-        this.printBoard(board, Colors.WHITE);
+        this.printBoard(board, Player.WHITE);
     }
 
 
     static printBoardForBlack(board: Board): void {
-        this.printBoard(board, Colors.BLACK);
+        this.printBoard(board, Player.BLACK);
     }
 }
