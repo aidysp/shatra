@@ -17,6 +17,16 @@ export class Board {
         activeFigure: Cell;
         capturedFigures: Cell[];
     }
+    private lastMoves: {
+        [Player.WHITE]: { from: Cell; to: Cell; figureId: string; } | null;
+        [Player.BLACK]: { from: Cell; to: Cell; figureId: string; } | null;
+
+    } = {
+            [Player.WHITE]: null,
+            [Player.BLACK]: null
+        }
+
+
 
     private addFigureToColorArray(cell: Cell): void {
         if (!cell.figure) return;
@@ -68,6 +78,14 @@ export class Board {
         if (to.figure !== null) return false;
         if (from.figure.color !== this.currentPlayer) return false;
 
+        const playerLastMove = this.lastMoves[this.currentPlayer];
+
+        if (playerLastMove && from.figure.id === playerLastMove.figureId) {
+            if (to.id === playerLastMove.from.id) {
+                return false;
+            }
+        }
+
         return from.figure.canMove(from, to);
     }
 
@@ -86,10 +104,7 @@ export class Board {
 
 
     public switchPlayer(): void {
-
-
         this.__currentPlayer = this.__currentPlayer === Player.BLACK ? Player.WHITE : Player.BLACK;
-
         console.log('New current:', this.__currentPlayer);
     }
 
@@ -162,6 +177,19 @@ export class Board {
             };
         }
 
+        newBoard.lastMoves = {
+            [Player.WHITE]: this.lastMoves[Player.WHITE] ? {
+                from: newBoard.getCellById(this.lastMoves[Player.WHITE]!.from.id)!,
+                to: newBoard.getCellById(this.lastMoves[Player.WHITE]!.to.id)!,
+                figureId: this.lastMoves[Player.WHITE]!.figureId
+            } : null,
+            [Player.BLACK]: this.lastMoves[Player.BLACK] ? {
+                from: newBoard.getCellById(this.lastMoves[Player.BLACK]!.from.id)!,
+                to: newBoard.getCellById(this.lastMoves[Player.BLACK]!.to.id)!,
+                figureId: this.lastMoves[Player.BLACK]!.figureId
+            } : null
+        };
+
 
         return newBoard;
     }
@@ -186,8 +214,10 @@ export class Board {
 
             const success = this.continueCaptureChain(to);
 
-            if (success && !this.canContinueCapture()) this.finishCaptureChain();
+            if (success && !this.canContinueCapture()) {
 
+                this.finishCaptureChain();
+            }
             return success;
         }
 
@@ -195,6 +225,13 @@ export class Board {
 
         to.figure = from.figure;
         from.figure = null;
+
+        this.lastMoves[this.currentPlayer] = {
+            from: from,
+            to: to,
+            figureId: to.figure!.id
+        }
+
         this.switchPlayer();
 
         return true;
@@ -232,15 +269,15 @@ export class Board {
         if (this.gameState == GameState.ACTIVE_CAPTURE_CHAIN) {
             if (!this.captureSession) {
                 console.warn('No active capture session');
-                this.__gameState = GameState.NORMAL; // Восстанавливаем состояние
+                this.__gameState = GameState.NORMAL;
                 return [];
             }
 
-            // Показываем ходы только если это активная фигура из цепочки захвата
+
             if (from.id === this.captureSession.activeFigure.id) {
                 return this.getCaptureMoves(this.captureSession.activeFigure);
             } else {
-                return []; // Для других фигур - нет доступных ходов
+                return [];
             }
         }
 
@@ -276,22 +313,15 @@ export class Board {
         return result;
     }
 
-    // Checking one figure that can capture
+
     public canFigureCapture(figureCell: Cell): boolean {
         if (!figureCell.figure) return false;
-
-
-
         if (figureCell.figure.color !== this.currentPlayer) return false;
-
-
-
-
 
         return this.getCaptureMoves(figureCell).length > 0;
     }
 
-    // get all figures that can capture 
+
     public getFiguresWithCaptures(): Cell[] {
         const figuresWithCapture: Cell[] = [];
 
@@ -306,7 +336,7 @@ export class Board {
         return figuresWithCapture;
     }
 
-    // get the ability to jump over a figure
+
     public getCaptureMoves(from: Cell): Cell[] {
         if (!from.figure) return [];
 
@@ -341,7 +371,7 @@ export class Board {
         return captureMoves;
     }
 
-    // // start a capture chain
+
     public startCaptureChain(from: Cell): boolean {
         if (!this.canFigureCapture(from)) return false;
 
@@ -356,7 +386,7 @@ export class Board {
         return true;
     }
 
-    // // continue the chain of capture
+
     public continueCaptureChain(to: Cell): boolean {
         if (!this.captureSession) {
             console.error('No capture session in continueCaptureChain');
