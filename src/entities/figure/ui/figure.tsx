@@ -85,7 +85,7 @@ const FigureLogo: React.FC<FigureProps> = ({
       figureRef.current.to({
         x: targetX,
         y: targetY,
-        duration: 0.3,
+        duration: 0.2,
         easing: Konva.Easings.EaseInOut,
         onFinish: () => {
           onAnimationComplete?.()

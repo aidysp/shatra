@@ -141,8 +141,6 @@ export default function Home() {
       setAnimatingFigure(null);
     });
 
-    setShatraBoard(shatraBoard.clone());
-    setAnimatingFigure(null);
     playMoveSound();
 
   }
