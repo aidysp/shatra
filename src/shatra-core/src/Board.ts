@@ -57,6 +57,9 @@ export class Board {
         if (middleCell.figure.color === from.figure.color) return false;
         if (targetCell.figure !== null) return false;
 
+        if (this.isOwnFortress(targetCell, from.figure.color)) return false;
+
+
         return true;
     }
 
@@ -71,6 +74,13 @@ export class Board {
         return middleCell ? this.isValidCaptureMoveWithMiddle(from, to, middleCell) : false;
     }
 
+    private isOwnFortress(cell: Cell, player: Player): boolean {
+        if (player === Player.BLACK) {
+            return cell.y <= 3;
+        } else {
+            return cell.y >= 10;
+        }
+    }
 
     private isValidNormalMove(from: Cell, to: Cell): boolean {
         if (!from.figure) return false;
@@ -84,6 +94,10 @@ export class Board {
             if (to.id === playerLastMove.from.id) {
                 return false;
             }
+        }
+
+        if (this.isOwnFortress(to, from.figure.color)) {
+            return false;
         }
 
         return from.figure.canMove(from, to);
