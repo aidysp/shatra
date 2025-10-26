@@ -295,7 +295,7 @@ export class Board {
 
 
         if (playerLastMove && from.figure.id === playerLastMove.figureId) {
-            if (to.id === playerLastMove.from.id) {
+            if (to.id === playerLastMove.from.id && to.y === from.y) {
                 return false;
             }
         }
@@ -530,10 +530,6 @@ export class Board {
         if (isExtractionMove) {
             return true;
         }
-
-
-
-
 
         const isCaptureMove = this.isValidCaptureMove(from, to);
         if (isCaptureMove) return true;
