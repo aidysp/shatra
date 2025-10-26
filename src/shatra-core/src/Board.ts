@@ -211,11 +211,13 @@ export class Board {
 
         const reservePositions = player === Player.BLACK
             ? [
+                { x: 3, y: 3 },
                 { x: 4, y: 2 }, { x: 3, y: 2 }, { x: 2, y: 2 },
                 { x: 4, y: 1 }, { x: 3, y: 1 }, { x: 2, y: 1 },
                 { x: 4, y: 0 }, { x: 3, y: 0 }, { x: 2, y: 0 }
             ]
             : [
+                { x: 3, y: 10 },
                 { x: 2, y: 11 }, { x: 3, y: 11 }, { x: 4, y: 11 },
                 { x: 2, y: 12 }, { x: 3, y: 12 }, { x: 4, y: 12 },
                 { x: 2, y: 13 }, { x: 3, y: 13 }, { x: 4, y: 13 }
@@ -241,6 +243,13 @@ export class Board {
         }
 
         return { orderViolated: false, nextPosition };
+    }
+
+    private isEnemyFortress(from: Cell): boolean {
+        if (!from.figure) return false;
+
+        return from.figure?.color === Player.WHITE ? from.y <= 3 : from.y >= 10
+
     }
 
     private isReserveTurn(cell: Cell): boolean {
@@ -291,9 +300,20 @@ export class Board {
             }
         }
 
+        const isExtractionMove = this.isEnemyFortress(from) &&
+            this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE)
+                .some(cell => cell.id === to.id);
+
+
+        if (isExtractionMove) {
+            return true;
+        }
+
         if (this.isOwnFortress(to, from.figure.color)) {
             return false;
         }
+
+
 
         return from.figure.canMove(from, to);
     }
@@ -503,6 +523,18 @@ export class Board {
         const isNormalMove = to.figure === null && from.figure.canMove(from, to);
         if (isNormalMove) return true;
 
+        const isExtractionMove = this.isEnemyFortress(from) &&
+            this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE)
+                .some(cell => cell.id === to.id);
+
+        if (isExtractionMove) {
+            return true;
+        }
+
+
+
+
+
         const isCaptureMove = this.isValidCaptureMove(from, to);
         if (isCaptureMove) return true;
 
@@ -534,6 +566,7 @@ export class Board {
         if (from.figure.color === this.__currentPlayer && this.hasForcedCapture()) return this.getCaptureMoves(from);
 
 
+
         const hasCaptureForThisFigure = this.getCaptureMoves(from).length > 0;
         const hasAnyForcedCapture = this.getFiguresWithCaptures().length > 0;
 
@@ -561,6 +594,12 @@ export class Board {
         if (this.isReserveTurn(from)) {
             return this.getEmptyMiddleZoneCells(this.__currentPlayer);
         }
+
+        if (from.figure.color === this.__currentPlayer && this.isEnemyFortress(from)) {
+            return this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE).concat(this.getNormalMoves(from));
+        }
+
+
 
         return this.getNormalMoves(from);
     }
