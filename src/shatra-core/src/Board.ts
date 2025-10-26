@@ -171,7 +171,7 @@ export class Board {
         if (middleCell.figure.color === from.figure.color) return false;
         if (targetCell.figure !== null) return false;
 
-        if (this.isOwnFortress(targetCell, from.figure.color) && !this.isReserveFigure(from)) {
+        if (targetCell.isOwnFortress(from.figure.color) && !from.isReserveFigure()) {
             return false;
         }
 
@@ -190,18 +190,6 @@ export class Board {
         return middleCell ? this.isValidCaptureMoveWithMiddle(from, to, middleCell) : false;
     }
 
-    private isOwnFortress(cell: Cell, player: Player): boolean {
-        if (player === Player.BLACK) {
-            return cell.y <= 3;
-        } else {
-            return cell.y >= 10;
-        }
-    }
-
-    private isReserveFigure(cell: Cell): boolean {
-        if (!cell.figure) return false;
-        return this.isOwnFortress(cell, cell.figure.color);
-    }
 
     private checkReserveOrder(player: Player): { orderViolated: boolean; nextPosition: { x: number, y: number } | null } {
 
@@ -245,12 +233,6 @@ export class Board {
         return { orderViolated: false, nextPosition };
     }
 
-    private isEnemyFortress(from: Cell): boolean {
-        if (!from.figure) return false;
-
-        return from.figure?.color === Player.WHITE ? from.y <= 3 : from.y >= 10
-
-    }
 
     private isReserveTurn(cell: Cell): boolean {
         if (!cell.figure) return false;
@@ -300,7 +282,7 @@ export class Board {
             }
         }
 
-        const isExtractionMove = this.isEnemyFortress(from) &&
+        const isExtractionMove = from.isEnemyFortress() &&
             this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE)
                 .some(cell => cell.id === to.id);
 
@@ -309,7 +291,7 @@ export class Board {
             return true;
         }
 
-        if (this.isOwnFortress(to, from.figure.color)) {
+        if (to.isOwnFortress(from.figure.color)) {
             return false;
         }
 
@@ -523,7 +505,7 @@ export class Board {
         const isNormalMove = to.figure === null && from.figure.canMove(from, to);
         if (isNormalMove) return true;
 
-        const isExtractionMove = this.isEnemyFortress(from) &&
+        const isExtractionMove = from.isEnemyFortress() &&
             this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE)
                 .some(cell => cell.id === to.id);
 
@@ -591,11 +573,9 @@ export class Board {
             return this.getEmptyMiddleZoneCells(this.__currentPlayer);
         }
 
-        if (from.figure.color === this.__currentPlayer && this.isEnemyFortress(from)) {
+        if (from.figure.color === this.__currentPlayer && from.isEnemyFortress()) {
             return this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE).concat(this.getNormalMoves(from));
         }
-
-
 
         return this.getNormalMoves(from);
     }
