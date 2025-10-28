@@ -46,4 +46,22 @@ export class Cell {
 
     }
 
+    public isEnemyBiyPosition(color: Player): boolean {
+        if (color === Player.WHITE) {
+            const result = this.x === 3 && this.y === 3;
+            return result;
+        } else {
+            const result = this.x === 3 && this.y === 10;
+            return result;
+        }
+    }
+
+    public isBiyStartingPosition(color: Player): boolean {
+        if (color === Player.WHITE) {
+            return this.x === 3 && this.y === 10;
+        } else {
+            return this.x === 3 && this.y === 3;
+        }
+    }
+
 }

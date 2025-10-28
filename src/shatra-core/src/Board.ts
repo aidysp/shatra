@@ -13,9 +13,154 @@ export class Board {
     protected blackFigures: Cell[] = [];
     private __currentPlayer: Player = Player.WHITE;
     private __gameState: GameState = GameState.NORMAL;
+    private activeWhiteBiyFigure: Cell | null = null;
+    private activeBlackBiyFigure: Cell | null = null;
     private captureSession?: {
         activeFigure: Cell;
         capturedFigures: Cell[];
+        reachedBiyPosition: boolean;
+        biyRightsActivated: boolean;
+    }
+    private getActiveBiyFigure(color: Player): Cell | null {
+        const result = color === Player.WHITE ? this.activeWhiteBiyFigure : this.activeBlackBiyFigure;
+        return result;
+    }
+    private setActiveBiyFigure(color: Player, cell: Cell | null): void {
+        if (color === Player.WHITE) {
+            this.activeWhiteBiyFigure = cell;
+        } else {
+            this.activeBlackBiyFigure = cell;
+        }
+    }
+    private clearActiveBiyFigure(color: Player): void {
+        this.setActiveBiyFigure(color, null);
+    }
+    private finishBiyRightsSession(): void {
+        if (!this.captureSession) return;
+
+        this.captureSession.capturedFigures.forEach(cell => {
+            if (cell.figure) {
+                this.removeFigureFromColorArray(cell);
+            }
+            cell.figure = null;
+        });
+
+
+        const activeFigure = this.captureSession.activeFigure;
+        this.setActiveBiyFigure(activeFigure.figure!.color, activeFigure);
+        this.captureSession = undefined;
+        this.__gameState = GameState.NORMAL;
+        this.switchPlayer();
+    }
+    private checkForcedBiyMove(): void {
+        if (this.__gameState !== GameState.NORMAL) return;
+
+        const currentPlayer = this.__currentPlayer;
+        const currentPlayerFigures = currentPlayer === Player.WHITE ? this.whiteFigures : this.blackFigures;
+        const figuresOnEnemyBiyPosition = currentPlayerFigures.filter(cell => {
+            return cell.isEnemyBiyPosition(currentPlayer) && cell.figure
+        });
+
+
+        if (figuresOnEnemyBiyPosition.length > 0) {
+            const activeBiyFigure = figuresOnEnemyBiyPosition[0];
+            const hasCaptureMoves = this.getCaptureMoves(activeBiyFigure).length > 0;
+
+            if (hasCaptureMoves) {
+                this.__gameState = GameState.BIY_FORCED_MOVE;
+                this.setActiveBiyFigure(currentPlayer, activeBiyFigure);
+                this.getActiveBiyFigure(currentPlayer);
+            }
+        }
+    }
+    private handleBiyRightsMove(from: Cell, to: Cell): boolean {
+
+        if (!this.captureSession) {
+            this.__gameState = GameState.NORMAL;
+            return false;
+        }
+
+        if (from.id !== this.captureSession.activeFigure.id) {
+            return false;
+        }
+
+        if (!from.figure) {
+            return false;
+        }
+
+        if (from === to) {
+            this.finishBiyRightsSession();
+            return true;
+        }
+
+        if (this.isValidCaptureMove(from, to)) {
+            const success = this.continueCaptureChain(to);
+            return success;
+        }
+
+        const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE);
+        if (extractionMoves.some(cell => cell.id === to.id)) {
+            to.figure = from.figure;
+            from.figure = null;
+
+            this.lastMoves[this.currentPlayer] = {
+                from: from,
+                to: to,
+                figureId: to.figure!.id
+            };
+
+            this.captureSession = undefined;
+            this.__gameState = GameState.NORMAL;
+            this.switchPlayer();
+            return true;
+        }
+
+        return false;
+    }
+    private handleBiyForcedMove(from: Cell, to: Cell): boolean {
+
+        const activeBiyFigure = this.getActiveBiyFigure(this.__currentPlayer);
+
+        if (!activeBiyFigure || from.id !== activeBiyFigure.id) {
+            return false;
+        }
+
+        if (!this.isValidMove(from, to)) {
+            return false;
+        }
+
+        let moveSuccess = false;
+
+        if (this.isValidCaptureMove(from, to)) {
+            if (this.gameState !== GameState.ACTIVE_CAPTURE_CHAIN) {
+                const chainStarted = this.startCaptureChain(from);
+                if (!chainStarted) return false;
+            }
+
+            moveSuccess = this.continueCaptureChain(to);
+
+            if (moveSuccess && !this.canContinueCapture()) {
+                this.finishCaptureChain();
+            }
+        }
+        else {
+            to.figure = from.figure;
+            from.figure = null;
+
+            this.lastMoves[this.currentPlayer] = {
+                from: from,
+                to: to,
+                figureId: to.figure!.id
+            };
+
+            this.clearActiveBiyFigure(this.__currentPlayer);
+            this.__gameState = GameState.NORMAL;
+            this.switchPlayer();
+            moveSuccess = true;
+        }
+
+        this.updateReserveOrderState();
+        return moveSuccess;
     }
     private lastMoves: {
         [Player.WHITE]: { from: Cell; to: Cell; figureId: string; } | null;
@@ -50,9 +195,6 @@ export class Board {
                 count: 9
             }
         }
-
-
-
     private addFigureToColorArray(cell: Cell): void {
         if (!cell.figure) return;
 
@@ -242,9 +384,7 @@ export class Board {
 
         if (!nextPos) return false;
 
-        return cell.figure.color === this.__currentPlayer &&
-            nextPos.x === cell.x &&
-            nextPos.y === cell.y;
+        return cell.figure.color === this.__currentPlayer && nextPos.x === cell.x && nextPos.y === cell.y;
     }
 
     private getEmptyMiddleZoneCells(color: Player): Cell[] {
@@ -268,6 +408,7 @@ export class Board {
 
 
     private isValidNormalMove(from: Cell, to: Cell): boolean {
+
         if (!from.figure) return false;
         if (from === to) return false;
         if (to.figure !== null) return false;
@@ -316,7 +457,7 @@ export class Board {
 
     public switchPlayer(): void {
         this.__currentPlayer = this.__currentPlayer === Player.BLACK ? Player.WHITE : Player.BLACK;
-        console.log('New current:', this.__currentPlayer);
+        this.checkForcedBiyMove();
     }
 
 
@@ -334,10 +475,6 @@ export class Board {
         });
 
 
-    }
-
-    public printCells() {
-        console.log(this.cells);
     }
 
     public initFigures() {
@@ -383,12 +520,20 @@ export class Board {
         newBoard.__currentPlayer = this.__currentPlayer;
         newBoard.__gameState = this.__gameState;
 
+
+        newBoard.activeWhiteBiyFigure = this.activeWhiteBiyFigure ?
+            newBoard.getCellById(this.activeWhiteBiyFigure.id)! : null;
+        newBoard.activeBlackBiyFigure = this.activeBlackBiyFigure ?
+            newBoard.getCellById(this.activeBlackBiyFigure.id)! : null;
+
         if (this.captureSession) {
             newBoard.captureSession = {
                 activeFigure: newBoard.getCellById(this.captureSession.activeFigure.id)!,
                 capturedFigures: this.captureSession.capturedFigures.map(cell =>
                     newBoard.getCellById(cell.id)!
-                )
+                ),
+                reachedBiyPosition: this.captureSession.reachedBiyPosition,
+                biyRightsActivated: this.captureSession.biyRightsActivated
             };
         }
 
@@ -433,6 +578,13 @@ export class Board {
     }
 
     public makeMove(from: Cell, to: Cell): boolean {
+        if (this.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+            return this.handleBiyRightsMove(from, to);
+        }
+
+        if (this.gameState === GameState.BIY_FORCED_MOVE) {
+            return this.handleBiyForcedMove(from, to);
+        }
 
 
         if (!this.isValidMove(from, to)) return false;
@@ -495,6 +647,7 @@ export class Board {
     }
 
     public isValidMove(from: Cell, to: Cell): boolean {
+
         if (!from.figure) return false;
         if (from === to) return false;
         if (to.figure !== null) return false;
@@ -522,8 +675,12 @@ export class Board {
 
 
     public getAvailableMoves(from: Cell): Cell[] {
-        if (!from.figure) return [];
 
+        if (this.__gameState === GameState.NORMAL) {
+            this.checkForcedBiyMove();
+        }
+
+        if (!from.figure) return [];
 
 
         if (this.gameState == GameState.ACTIVE_CAPTURE_CHAIN) {
@@ -539,6 +696,42 @@ export class Board {
             } else {
                 return [];
             }
+        }
+
+        if (this.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+            if (!this.captureSession) {
+                console.warn('No active capture session in BIY_RIGHTS_ACTIVE');
+                this.__gameState = GameState.NORMAL;
+                return [];
+            }
+
+            if (from.id !== this.captureSession.activeFigure.id || from.figure.color !== this.__currentPlayer) {
+                return [];
+            }
+
+
+
+            const currentCell = this.captureSession.activeFigure;
+            const captureMoves = this.getCaptureMoves(currentCell);
+
+            return [currentCell, ...captureMoves];
+        }
+
+        if (this.gameState === GameState.BIY_FORCED_MOVE) {
+            const activeBiyFigure = this.getActiveBiyFigure(this.__currentPlayer);
+
+            // Только активная фигура бия может ходить
+            if (!activeBiyFigure || from.id !== activeBiyFigure.id || from.figure.color !== this.__currentPlayer) {
+                return [];
+            }
+
+            const captureMoves = this.getCaptureMoves(activeBiyFigure);
+            const normalMoves = this.getNormalMoves(activeBiyFigure);
+            const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE);
+
+
+
+            return [...captureMoves, ...normalMoves, ...extractionMoves];
         }
 
         if (from.figure.color === this.__currentPlayer && this.hasForcedCapture()) return this.getCaptureMoves(from);
@@ -583,6 +776,7 @@ export class Board {
 
 
     public getNormalMoves(from: Cell): Cell[] {
+
         if (!from.figure) return [];
 
         const normalMoves: Cell[] = [];
@@ -651,7 +845,7 @@ export class Board {
             const targetCell = this.getCell(targetX, targetY);
             const middleCell = this.getCell(middleX, middleY);
 
-            if (targetCell && middleCell && this.isValidCaptureMoveWithMiddle(from, targetCell, middleCell)) {
+            if (from.figure?.color === this.__currentPlayer && targetCell && middleCell && this.isValidCaptureMoveWithMiddle(from, targetCell, middleCell)) {
                 captureMoves.push(targetCell);
             }
         });
@@ -661,11 +855,14 @@ export class Board {
 
 
     public startCaptureChain(from: Cell): boolean {
+
         if (!this.canFigureCapture(from)) return false;
 
         this.captureSession = {
             activeFigure: from,
-            capturedFigures: []
+            capturedFigures: [],
+            reachedBiyPosition: false,
+            biyRightsActivated: false
         }
 
         this.__gameState = GameState.ACTIVE_CAPTURE_CHAIN;
@@ -684,7 +881,6 @@ export class Board {
         const from = this.captureSession.activeFigure;
 
         if (!this.isValidCaptureMove(from, to)) {
-            console.log('Invalid capture move in continueCaptureChain');
             return false;
         }
 
@@ -704,19 +900,34 @@ export class Board {
 
         this.captureSession.activeFigure = to;
 
+        if (this.__gameState === GameState.BIY_RIGHTS_ACTIVE &&
+            !to.isEnemyBiyPosition(to.figure!.color)) {
+            this.__gameState = GameState.ACTIVE_CAPTURE_CHAIN;
+            this.clearActiveBiyFigure(to.figure!.color);
+        }
+
+        if (to.isEnemyBiyPosition(to.figure!.color)) {
+            this.captureSession.reachedBiyPosition = true;
+            this.captureSession.biyRightsActivated = true;
+            this.__gameState = GameState.BIY_RIGHTS_ACTIVE;
+            this.setActiveBiyFigure(to.figure!.color, to);
+            return true;
+        }
+
         return true;
     }
 
     public canContinueCapture(): boolean {
         if (!this.captureSession) return false;
-
         const currentPosition = this.captureSession.activeFigure;
 
         return this.getCaptureMoves(currentPosition).length > 0;
     }
 
     public finishCaptureChain(): void {
+
         if (!this.captureSession) return;
+
 
         this.captureSession.capturedFigures.forEach(cell => {
             if (cell.figure) {
@@ -725,6 +936,10 @@ export class Board {
             cell.figure = null;
         }
         );
+
+        if (this.captureSession.activeFigure.figure) {
+            this.clearActiveBiyFigure(this.captureSession.activeFigure.figure.color);
+        }
 
         this.captureSession = undefined;
 
