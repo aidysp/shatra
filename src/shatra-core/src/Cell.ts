@@ -64,4 +64,11 @@ export class Cell {
         }
     }
 
+    public isGate() {
+        if (this.y === 10 && this.x === 3) return true;
+        if (this.y === 3 && this.x === 3) return true;
+
+        return false;
+    }
+
 }
