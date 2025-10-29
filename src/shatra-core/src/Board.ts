@@ -2,6 +2,7 @@ import { Cell } from "./Cell";
 import { Colors } from "./config/Colors";
 import { GameState } from "./config/GameState";
 import { Player } from "./config/Player";
+import { Baatyr } from "./Figures/Baatyr";
 import { Biy } from "./Figures/Biy";
 import { Figure } from "./Figures/Figure";
 import { Shatra } from "./Figures/Shatra";
@@ -309,6 +310,26 @@ export class Board {
 
         this.switchPlayer();
         return true;
+    }
+
+    private checkPromotion(cell: Cell): boolean {
+        if (!cell.figure || !(cell.figure instanceof Shatra)) return false;
+
+        if (cell.figure.color === Player.WHITE && cell.y === 0) return true;
+        if (cell.figure.color === Player.BLACK && cell.y === 13) return true;
+
+        return false;
+    }
+
+    private promoteToBaatyr(cell: Cell): void {
+        if (!cell.figure) return;
+
+        const newBaatyr = new Baatyr(cell.figure.id, cell.figure.color);
+        cell.figure = newBaatyr;
+
+
+        this.removeFigureFromColorArray(cell);
+        this.addFigureToColorArray(cell);
     }
 
     private isReserveExtractionMove(from: Cell, to: Cell): boolean {
@@ -702,6 +723,10 @@ export class Board {
 
         to.figure = from.figure;
         from.figure = null;
+
+        if (this.checkPromotion(to)) {
+            this.promoteToBaatyr(to);
+        }
 
         this.lastMoves[this.currentPlayer] = {
             from: from,
