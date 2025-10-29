@@ -2,7 +2,7 @@ import { Cell } from "./Cell";
 import { Colors } from "./config/Colors";
 import { GameState } from "./config/GameState";
 import { Player } from "./config/Player";
-// import { Biy } from "./Figures/Biy";
+import { Biy } from "./Figures/Biy";
 import { Figure } from "./Figures/Figure";
 import { Shatra } from "./Figures/Shatra";
 
@@ -360,7 +360,7 @@ export class Board {
             const pos = reservePositions[i];
             const cell = this.getCell(pos.x, pos.y);
 
-            if (cell?.figure && cell.figure.color === player) {
+            if (cell?.figure && cell.figure.color === player && !(cell.figure instanceof Biy)) {
                 if (!foundFigure) {
                     foundFigure = true;
                     nextPosition = { x: pos.x, y: pos.y };
@@ -490,8 +490,8 @@ export class Board {
                 cell.figure = new Shatra((cell.x + "_" + cell.y), Player.WHITE);
                 this.addFigureToColorArray(cell);
             }
-            // if (cell.id == 10) cell.figure = new Biy((cell.x + "_" + cell.y), Player.BLACK);
-            // if (cell.id == 53) cell.figure = new Biy((cell.x + "_" + cell.y), Player.WHITE);
+            if (cell.id == 10) cell.figure = new Biy((cell.x + "_" + cell.y), Player.BLACK);
+            if (cell.id == 53) cell.figure = new Biy((cell.x + "_" + cell.y), Player.WHITE);
         });
 
         this.updateReserveOrderState();
