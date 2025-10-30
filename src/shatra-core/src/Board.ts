@@ -493,7 +493,7 @@ export class Board {
 
 
 
-        return from.figure.canMove(from, to);
+        return from.figure.getPossibleMoves(from, this).some(move => move.x === to.x && move.y === to.y);
     }
 
     public get currentPlayer(): Player {
@@ -782,7 +782,7 @@ export class Board {
         }
 
 
-        const isNormalMove = to.figure === null && from.figure.canMove(from, to);
+        const isNormalMove = to.figure === null && from.figure.getPossibleMoves(from, this).some(move => move.x === to.x && move.y === to.y);
         if (isNormalMove) return true;
 
         const isExtractionMove = from.isEnemyFortress() &&
@@ -926,7 +926,7 @@ export class Board {
         if (!from.figure) return [];
 
         const normalMoves: Cell[] = [];
-        const possibleCoords = from.figure.getPossibleMoves(from);
+        const possibleCoords = from.figure.getPossibleMoves(from, this);
 
 
         possibleCoords.forEach(coord => {

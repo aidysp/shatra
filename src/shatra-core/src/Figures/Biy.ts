@@ -6,8 +6,6 @@ import { Figure } from "./Figure";
 
 
 
-
-
 export class Biy extends Figure {
     logo: Figures;
 
@@ -16,10 +14,10 @@ export class Biy extends Figure {
         this.logo = Figures.Biy;
     }
 
-    canMove(from: Cell, to: Cell): boolean {
-        const possibleMoves = this.getPossibleMoves(from);
-        return possibleMoves.some(move => move.x === to.x && move.y === to.y);
-    }
+    // canMove(from: Cell, to: Cell): boolean {
+    //     const possibleMoves = this.getPossibleMoves(from);
+    //     return possibleMoves.some(move => move.x === to.x && move.y === to.y);
+    // }
 
     getPossibleMoves(from: Cell): { x: number, y: number }[] {
         const direction = DirectionUtils.getPlayerDirection(this.color);
@@ -35,7 +33,6 @@ export class Biy extends Figure {
             { x: from.x - 1, y: from.y },
             // Right
             { x: from.x + 1, y: from.y },
-
             // Bottom
             { x: from.x, y: from.y - direction },
             // Left-bottom
@@ -50,23 +47,21 @@ export class Biy extends Figure {
         const backwardDirection = -forwardDirection;
 
         return [
-            // Вперед через фигуру
+            // Forward through the shape
             { dx: 0, dy: forwardDirection * 2 },
-            // Влево-вперед через фигуру  
+            // Left-forward through the shape 
             { dx: -2, dy: forwardDirection * 2 },
-            // Вправо-вперед через фигуру
+            // Right-forward through the shape
             { dx: 2, dy: forwardDirection * 2 },
-
-            // Назад через фигуру
+            // Backward through the shape
             { dx: 0, dy: backwardDirection * 2 },
-            // Влево-назад через фигуру
+            // Left-backward through the 
             { dx: -2, dy: backwardDirection * 2 },
-            // Вправо-назад через фигуру
+            // Right-back through the shape
             { dx: 2, dy: backwardDirection * 2 },
-
-            // Влево через фигуру (горизонтально)
+            // Left through the shape 
             { dx: -2, dy: 0 },
-            // Вправо через фигуру (горизонтально)
+            // Right through the shape 
             { dx: 2, dy: 0 }
         ]
     }
