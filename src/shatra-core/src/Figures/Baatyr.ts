@@ -5,9 +5,6 @@ import { Player } from "../config/Player";
 import { Figure } from "./Figure";
 
 
-
-
-
 export class Baatyr extends Figure {
     logo: Figures;
 

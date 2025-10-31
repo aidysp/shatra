@@ -2,6 +2,7 @@ import { Colors } from "./config/Colors";
 import { Player } from "./config/Player";
 
 import { Figure } from "./Figures/Figure";
+import { Shatra } from "./Figures/Shatra";
 
 
 
@@ -36,7 +37,7 @@ export class Cell {
 
     public isReserveFigure(): boolean {
         if (!this.figure) return false;
-        return this.isOwnFortress(this.figure.color);
+        return this.figure instanceof Shatra && this.isOwnFortress(this.figure.color);
     }
 
     public isEnemyFortress(): boolean {

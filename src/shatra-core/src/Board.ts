@@ -56,6 +56,8 @@ export class Board {
     private checkForcedBiyMove(): void {
         if (this.__gameState !== GameState.NORMAL) return;
 
+
+
         const currentPlayer = this.__currentPlayer;
         const currentPlayerFigures = currentPlayer === Player.WHITE ? this.whiteFigures : this.blackFigures;
         const figuresOnEnemyBiyPosition = currentPlayerFigures.filter(cell => {
@@ -122,15 +124,45 @@ export class Board {
 
         const activeBiyFigure = this.getActiveBiyFigure(this.__currentPlayer);
 
-        if (!activeBiyFigure || from.id !== activeBiyFigure.id) {
-            return false;
-        }
+        // Если это активный Бий - обрабатываем его ход
+        if (activeBiyFigure && from.id === activeBiyFigure.id) {
+            if (!this.isValidMove(from, to)) {
+                return false;
+            }
 
-        if (!this.isValidMove(from, to)) {
-            return false;
-        }
+            let moveSuccess = false;
 
-        let moveSuccess = false;
+            if (this.isValidCaptureMove(from, to)) {
+                if (this.gameState !== GameState.ACTIVE_CAPTURE_CHAIN) {
+                    const chainStarted = this.startCaptureChain(from);
+                    if (!chainStarted) return false;
+                }
+
+                moveSuccess = this.continueCaptureChain(to);
+
+                if (moveSuccess && !this.canContinueCapture()) {
+                    this.finishCaptureChain();
+                }
+            }
+            else {
+                to.figure = from.figure;
+                from.figure = null;
+
+                this.lastMoves[this.currentPlayer] = {
+                    from: from,
+                    to: to,
+                    figureId: to.figure!.id
+                };
+
+                this.clearActiveBiyFigure(this.__currentPlayer);
+                this.__gameState = GameState.NORMAL;
+                this.switchPlayer();
+                moveSuccess = true;
+            }
+
+            this.updateReserveOrderState();
+            return moveSuccess;
+        }
 
         if (this.isValidCaptureMove(from, to)) {
             if (this.gameState !== GameState.ACTIVE_CAPTURE_CHAIN) {
@@ -138,31 +170,22 @@ export class Board {
                 if (!chainStarted) return false;
             }
 
-            moveSuccess = this.continueCaptureChain(to);
-
-            if (moveSuccess && !this.canContinueCapture()) {
+            const success = this.continueCaptureChain(to);
+            if (success && !this.canContinueCapture()) {
                 this.finishCaptureChain();
             }
-        }
-        else {
-            to.figure = from.figure;
-            from.figure = null;
 
-            this.lastMoves[this.currentPlayer] = {
-                from: from,
-                to: to,
-                figureId: to.figure!.id
-            };
-
-            this.clearActiveBiyFigure(this.__currentPlayer);
-            this.__gameState = GameState.NORMAL;
-            this.switchPlayer();
-            moveSuccess = true;
+            this.updateReserveOrderState();
+            return success;
         }
 
-        this.updateReserveOrderState();
-        return moveSuccess;
+
+
+        return false;
     }
+
+
+
     private lastMoves: {
         [Player.WHITE]: { from: Cell; to: Cell; figureId: string; } | null;
         [Player.BLACK]: { from: Cell; to: Cell; figureId: string; } | null;
@@ -233,7 +256,8 @@ export class Board {
 
             playerState.count = reservePositions.filter(pos => {
                 const cell = this.getCell(pos.x, pos.y);
-                return cell?.figure && cell.figure.color === player;
+                return cell?.figure && cell.figure.color === player &&
+                    cell.figure instanceof Shatra;;
             }).length;
 
 
@@ -264,12 +288,17 @@ export class Board {
                 { x: 4, y: 0 }, { x: 3, y: 0 }, { x: 2, y: 0 }
             ];
 
-        return fortressPositions.some(pos => {
+        const hasReserves = fortressPositions.some(pos => {
             const cell = this.getCell(pos.x, pos.y);
-            return cell?.figure &&
+            const result = cell?.figure &&
                 cell.figure.color === color &&
                 cell.figure instanceof Shatra;
+
+            return result;
         });
+
+
+        return hasReserves;
     }
 
     private handleReserveExtraction(from: Cell, to: Cell): boolean {
@@ -351,31 +380,119 @@ export class Board {
 
 
     private isValidCaptureMoveWithMiddle(from: Cell, targetCell: Cell, middleCell: Cell): boolean {
-        if (!from.figure) return false;
-        if (!middleCell.figure) return false;
 
-        if (this.captureSession?.capturedFigures.includes(middleCell)) return false;
-
-        if (middleCell.figure.color === from.figure.color) return false;
-        if (targetCell.figure !== null) return false;
-
-        if (targetCell.isOwnFortress(from.figure.color) && !from.isReserveFigure()) {
+        if (!from.figure) {
             return false;
         }
+
+
+
+        if (!middleCell.figure) {
+            return false;
+        }
+
+        if (this.captureSession?.capturedFigures.includes(middleCell)) {
+            return false;
+        }
+
+        if (middleCell.figure.color === from.figure.color) {
+            return false;
+        }
+        if (targetCell.figure !== null) {
+            return false;
+        }
+
+
+
+        if (from.figure instanceof Shatra && targetCell.isOwnFortress(from.figure.color)) {
+            return false;
+        }
+
+        if (from.figure instanceof Biy && targetCell.isOwnFortress(from.figure.color)) {
+            if (targetCell.isGate()) {
+                return true;
+            }
+
+            else {
+                const hasReserves = this.hasReservesInFortress(from.figure.color);
+                return !hasReserves;
+            }
+        }
+
+        if (from.figure instanceof Baatyr && from.isOwnFortress(from.figure.color)) {
+            if (from.isOwnFortress(from.figure.color)) {
+                return true;
+            }
+            const hasReserves = this.hasReservesInFortress(from.figure.color);
+            return !hasReserves;
+        }
+
+
 
 
         return true;
     }
 
+    private isValidBaatyrCaptureMove(from: Cell, to: Cell): boolean {
+        if (!from.figure) return false;
+
+        const availableCaptureMoves = this.getBaatyrCaptureMoves(from);
+        const isValidMove = availableCaptureMoves.some(cell => cell.x === to.x && cell.y === to.y);
+
+
+
+        if (!isValidMove) return false;
+
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+
+        const dirX = dx === 0 ? 0 : dx > 0 ? 1 : -1;
+        const dirY = dy === 0 ? 0 : dy > 0 ? 1 : -1;
+
+        let distance = 1;
+        while (true) {
+            const checkX = from.x + dirX * distance;
+            const checkY = from.y + dirY * distance;
+            const checkCell = this.getCell(checkX, checkY);
+
+            if (!checkCell || checkCell === to) break;
+
+            if (checkCell.figure) {
+                if (this.captureSession?.capturedFigures.includes(checkCell)) {
+                    distance++;
+                    continue;
+                }
+                if (checkCell.figure.color !== from.figure.color) {
+                    const result = this.isValidCaptureMoveWithMiddle(from, to, checkCell);
+                    return result;
+                } else {
+                    return false;
+                }
+            }
+            distance++;
+        }
+
+        return false;
+    }
+
     private isValidCaptureMove(from: Cell, to: Cell): boolean {
+
+        if (from.figure instanceof Baatyr) {
+            const result = this.isValidBaatyrCaptureMove(from, to);
+            return result;
+
+        }
+
+
         const dx = to.x - from.x;
         const dy = to.y - from.y;
         const middleX = from.x + dx / 2;
         const middleY = from.y + dy / 2;
 
         const middleCell = this.getCell(middleX, middleY);
+        const result = middleCell ? this.isValidCaptureMoveWithMiddle(from, to, middleCell) : false;
 
-        return middleCell ? this.isValidCaptureMoveWithMiddle(from, to, middleCell) : false;
+        return result;
     }
 
 
@@ -455,6 +572,7 @@ export class Board {
 
     private isValidNormalMove(from: Cell, to: Cell): boolean {
 
+
         if (!from.figure) return false;
         if (from === to) return false;
         if (to.figure !== null) return false;
@@ -464,12 +582,24 @@ export class Board {
 
 
         if (playerLastMove && from.figure.id === playerLastMove.figureId) {
-            if (!(from.figure instanceof Biy)) {
+            if (from.figure instanceof Shatra) {
                 if (to.id === playerLastMove.from.id && to.y === from.y) {
                     return false;
                 }
             }
         }
+
+
+        if (from.isOwnFortress(from.figure.color) && from.figure instanceof Baatyr) {
+
+
+            const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color);
+            const isExtractionMove = extractionMoves.some(cell => cell.id === to.id);
+            const isNormalMove = from.figure.getPossibleMoves(from, this).some(move => move.x === to.x && move.y === to.y);
+
+            return isExtractionMove || isNormalMove;
+        }
+
 
         const isExtractionMove = from.isEnemyFortress() &&
             this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE)
@@ -480,20 +610,124 @@ export class Board {
             return true;
         }
 
-        if (to.isOwnFortress(from.figure.color)) {
+        if (to.isOwnFortress(from.figure.color) && !from.isOwnFortress(from.figure.color)) {
             if (from.figure instanceof Biy) {
                 if (to.isGate()) {
                     return true;
-                } else {
+                }
+                else {
                     return !this.hasReservesInFortress(from.figure.color);
                 }
+            }
+            else if (from.figure instanceof Baatyr) {
+                return !this.hasReservesInFortress(from.figure.color);
             }
             return false;
         }
 
+        if (to.isOwnFortress(from.figure.color) && from.figure instanceof Baatyr) {
+            const hasReserves = this.hasReservesInFortress(from.figure.color);
+
+            if (hasReserves) {
+
+                return false;
+            }
+        }
 
 
-        return from.figure.getPossibleMoves(from, this).some(move => move.x === to.x && move.y === to.y);
+        const result = from.figure.getPossibleMoves(from, this).some(move => move.x === to.x && move.y === to.y);
+        return result;
+    }
+
+    private hasBaatyrCaptureMoves(): boolean {
+        const currentPlayerFigures = this.currentPlayer === Player.WHITE ? this.whiteFigures : this.blackFigures;
+
+        return currentPlayerFigures.some(cell =>
+            cell.figure instanceof Baatyr && this.getBaatyrCaptureMoves(cell).length > 0
+        );
+    }
+
+    private getBaatyrCaptureMoves(from: Cell): Cell[] {
+        const captureMoves: Cell[] = [];
+
+        const directions = [
+            { dx: 0, dy: -1 }, { dx: 0, dy: 1 },
+            { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+            { dx: -1, dy: -1 }, { dx: 1, dy: -1 },
+            { dx: -1, dy: 1 }, { dx: 1, dy: 1 }
+        ];
+
+        for (const direction of directions) {
+            let distance = 1;
+
+            while (true) {
+                const checkX = from.x + direction.dx * distance;
+                const checkY = from.y + direction.dy * distance;
+                const checkCell = this.getCell(checkX, checkY);
+
+                if (!checkCell) break;
+
+                if (checkCell.figure) {
+                    if (this.captureSession?.capturedFigures.includes(checkCell)) {
+                        break;
+                    }
+
+                    if (this.captureSession?.capturedFigures.includes(checkCell)) {
+                        distance++;
+                        continue;
+                    }
+                    if (checkCell.figure.color !== from.figure!.color) {
+                        let captureDistance = distance + 1;
+                        const possibleMoves: Cell[] = [];
+                        const continuingMoves: Cell[] = [];
+
+                        while (true) {
+                            const targetX = from.x + direction.dx * captureDistance;
+                            const targetY = from.y + direction.dy * captureDistance;
+                            const targetCell = this.getCell(targetX, targetY);
+
+                            if (!targetCell || targetCell.figure) break;
+
+                            possibleMoves.push(targetCell);
+                            captureDistance++;
+                        }
+
+                        if (possibleMoves.length > 0) {
+                            for (const moveCell of possibleMoves) {
+                                const tempBoard = this.clone();
+                                const tempFrom = tempBoard.getCell(from.x, from.y)!;
+                                const tempTo = tempBoard.getCell(moveCell.x, moveCell.y)!;
+
+                                const enemyX = from.x + direction.dx * distance;
+                                const enemyY = from.y + direction.dy * distance;
+                                const tempEnemy = tempBoard.getCell(enemyX, enemyY)!;
+
+                                tempBoard.removeFigureFromColorArray(tempEnemy);
+                                tempEnemy.figure = null;
+                                tempTo.figure = tempFrom.figure;
+                                tempFrom.figure = null;
+
+                                const canContinue = tempBoard.getCaptureMoves(tempTo).length > 0;
+
+                                if (canContinue) {
+                                    continuingMoves.push(moveCell);
+                                }
+                            }
+
+                            if (continuingMoves.length > 0) {
+                                captureMoves.push(...continuingMoves);
+                            } else {
+                                captureMoves.push(...possibleMoves);
+                            }
+                        }
+                    }
+                    break;
+                }
+                distance++;
+            }
+        }
+
+        return captureMoves;
     }
 
     public get currentPlayer(): Player {
@@ -512,6 +746,7 @@ export class Board {
 
     public switchPlayer(): void {
         this.__currentPlayer = this.__currentPlayer === Player.BLACK ? Player.WHITE : Player.BLACK;
+
         this.checkForcedBiyMove();
     }
 
@@ -633,12 +868,20 @@ export class Board {
     }
 
     public makeMove(from: Cell, to: Cell): boolean {
+
+
+
         if (this.gameState === GameState.BIY_RIGHTS_ACTIVE) {
             return this.handleBiyRightsMove(from, to);
         }
 
         if (this.gameState === GameState.BIY_FORCED_MOVE) {
-            return this.handleBiyForcedMove(from, to);
+
+
+            const result = this.handleBiyForcedMove(from, to);
+            if (result !== false) {
+                return result;
+            }
         }
 
 
@@ -646,6 +889,7 @@ export class Board {
             from === to &&
             from.figure instanceof Biy &&
             this.captureSession?.activeFigure.id === from.id) {
+
             this.lastMoves[this.currentPlayer] = {
                 from: from,
                 to: from,
@@ -657,7 +901,9 @@ export class Board {
 
 
 
-        if (!this.isValidMove(from, to)) return false;
+        if (!this.isValidMove(from, to)) {
+            return false;
+        }
 
         if (this.isValidCaptureMove(from, to)) {
             if (this.gameState !== GameState.ACTIVE_CAPTURE_CHAIN) {
@@ -679,20 +925,96 @@ export class Board {
             return success;
         }
 
+        if (from.figure instanceof Baatyr &&
+            from.isOwnFortress(from.figure.color) &&
+            from.figure.color === this.currentPlayer) {
+
+
+            const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color);
+            const isExtractionMove = extractionMoves.some(cell => cell.id === to.id);
+
+
+            if (isExtractionMove) {
+                to.figure = from.figure;
+                from.figure = null;
+
+                this.lastMoves[this.currentPlayer] = {
+                    from: from,
+                    to: to,
+                    figureId: to.figure!.id
+                };
+
+                this.switchPlayer();
+                this.updateReserveOrderState();
+                return true;
+            }
+        }
+
+        if (from.figure instanceof Baatyr && from.isGate()) {
+
+            if (this.isValidCaptureMove(from, to)) {
+                if (this.gameState !== GameState.ACTIVE_CAPTURE_CHAIN) {
+                    const chainStarted = this.startCaptureChain(from);
+                    if (!chainStarted) return false;
+                }
+                const success = this.continueCaptureChain(to);
+                if (success && !this.canContinueCapture()) {
+                    this.finishCaptureChain();
+                }
+                this.updateReserveOrderState();
+                return success;
+            } else {
+                to.figure = from.figure;
+                from.figure = null;
+
+                if (this.checkPromotion(to)) {
+                    this.promoteToBaatyr(to);
+                }
+
+                this.lastMoves[this.currentPlayer] = {
+                    from: from,
+                    to: to,
+                    figureId: to.figure!.id
+                }
+
+                this.switchPlayer();
+                this.updateReserveOrderState();
+                return true;
+            }
+        }
+
+
+
         const hasShatraCapture = this.hasShatraForcedCapture();
+        const hasBaatyrCapture = this.hasBaatyrForcedCapture();
+        const hasBiyCapture = this.getFiguresWithCaptures('biy').length > 0;
         const hasAnyCapture = this.hasForcedCapture();
 
         if (hasAnyCapture) {
             if (hasShatraCapture) {
-                return false;
+                if (!this.canFigureCapture(from)) {
+                    return false;
+                }
             }
-
-            if (!(from.figure instanceof Biy)) {
-                return false;
+            else if (hasBiyCapture && !hasBaatyrCapture) {
+                if (!(from.figure instanceof Biy)) {
+                    return false;
+                }
             }
-
+            else if (hasBaatyrCapture && !hasBiyCapture) {
+                if (!(from.figure instanceof Baatyr)) {
+                    return false;
+                }
+            }
+            else if (hasBiyCapture && hasBaatyrCapture) {
+                if (!(from.figure instanceof Biy || from.figure instanceof Baatyr)) {
+                    return false;
+                }
+                if (!this.isValidCaptureMove(from, to)) {
+                    return false;
+                }
+            }
         }
-
 
         if (this.isReserveExtractionMove(from, to)) {
             const result = this.handleReserveExtraction(from, to);
@@ -756,7 +1078,10 @@ export class Board {
 
     public isValidMove(from: Cell, to: Cell): boolean {
 
-        if (!from.figure) return false;
+
+        if (!from.figure) {
+            return false
+        };
         if (from === to) {
             if (this.gameState === GameState.ACTIVE_CAPTURE_CHAIN && from.figure instanceof Biy && this.captureSession?.activeFigure.id === from.id) {
                 return true;
@@ -766,11 +1091,90 @@ export class Board {
         if (to.figure !== null) return false;
         if (from.figure.color !== this.currentPlayer) return false;
 
+
+        if (this.gameState === GameState.BIY_FORCED_MOVE) {
+            const activeBiyFigure = this.getActiveBiyFigure(this.__currentPlayer);
+
+            if (activeBiyFigure && from.id === activeBiyFigure.id) {
+                const captureMoves = this.getCaptureMoves(activeBiyFigure);
+                const normalMoves = this.getNormalMoves(activeBiyFigure);
+                const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE);
+
+                const allMoves = [...captureMoves, ...normalMoves, ...extractionMoves];
+                return allMoves.some(move => move.id === to.id);
+            }
+
+        }
+
+        if (from.figure instanceof Biy && this.isBiyInOwnFortress(from) && from.figure.color === this.currentPlayer) {
+            const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color);
+            if (extractionMoves.some(cell => cell.id === to.id)) {
+                return true;
+            }
+        }
+
+
+        if (from.figure instanceof Baatyr &&
+            from.isOwnFortress(from.figure.color) &&
+            from.figure.color === this.currentPlayer) {
+            if (this.getBaatyrCaptureMoves(from).length > 0) {
+                return true;
+            }
+            const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color);
+            const isExtractionMove = extractionMoves.some(cell => cell.id === to.id);
+            const isNormalMove = from.figure.getPossibleMoves(from, this).some(move => move.x === to.x && move.y === to.y);
+
+
+            return isExtractionMove || isNormalMove;
+        }
+
+
+        if (from.figure instanceof Baatyr && from.isGate()) {
+            const isCaptureMove = this.isValidCaptureMove(from, to);
+            const isNormalMove = from.figure.getPossibleMoves(from, this).some(move => move.x === to.x && move.y === to.y);
+            const isExtractionMove = from.isEnemyFortress()
+                ? this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE).some(cell => cell.id === to.id)
+                : this.getEmptyMiddleZoneCells(from.figure.color).some(cell => cell.id === to.id);
+
+            return isCaptureMove || isNormalMove || isExtractionMove;
+        }
+
+
+
+
         const hasShatraCapture = this.hasShatraForcedCapture();
+        const hasBaatyrCapture = this.hasBaatyrCaptureMoves();
+        const hasBiyCapture = this.getFiguresWithCaptures('biy').length > 0;
         const hasAnyCapture = this.hasForcedCapture();
 
-        if (hasAnyCapture && !hasShatraCapture && !(from.figure instanceof Biy)) {
-            return false;
+
+
+
+
+        if (hasAnyCapture) {
+            if (hasShatraCapture) {
+                if (!this.canFigureCapture(from)) {
+                    return false;
+                }
+            }
+            else if (hasBiyCapture && !hasBaatyrCapture) {
+                if (!(from.figure instanceof Biy)) {
+                    return false;
+                }
+            }
+            else if (hasBaatyrCapture && !hasBiyCapture) {
+                if (!(from.figure instanceof Baatyr)) {
+                    return false;
+                }
+            }
+            else if (hasBiyCapture && hasBaatyrCapture) {
+                if (!(from.figure instanceof Biy || from.figure instanceof Baatyr)) {
+                    return false;
+                }
+                if (!this.isValidCaptureMove(from, to)) {
+                    return false;
+                }
+            }
         }
 
 
@@ -794,7 +1198,18 @@ export class Board {
         }
 
         const isCaptureMove = this.isValidCaptureMove(from, to);
-        if (isCaptureMove) return true;
+
+        if (isCaptureMove) {
+            return true;
+        }
+
+        if (from.figure instanceof Shatra && from.isOwnFortress(from.figure.color)) {
+            if (!this.isReserveTurn(from)) {
+                return false;
+            }
+            const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color);
+            return extractionMoves.some(cell => cell.id === to.id);
+        }
 
         return false;
 
@@ -802,6 +1217,7 @@ export class Board {
 
 
     public getAvailableMoves(from: Cell): Cell[] {
+
 
         if (this.__gameState === GameState.NORMAL) {
             this.checkForcedBiyMove();
@@ -812,7 +1228,6 @@ export class Board {
 
         if (this.gameState == GameState.ACTIVE_CAPTURE_CHAIN) {
             if (!this.captureSession) {
-                console.warn('No active capture session');
                 this.__gameState = GameState.NORMAL;
                 return [];
             }
@@ -846,27 +1261,41 @@ export class Board {
             const currentCell = this.captureSession.activeFigure;
             const captureMoves = this.getCaptureMoves(currentCell);
 
+
+            if (currentCell.figure instanceof Baatyr) {
+                return [currentCell, ...captureMoves];
+            }
+
             return [currentCell, ...captureMoves];
         }
 
         if (this.gameState === GameState.BIY_FORCED_MOVE) {
             const activeBiyFigure = this.getActiveBiyFigure(this.__currentPlayer);
 
-            if (!activeBiyFigure || from.id !== activeBiyFigure.id || from.figure.color !== this.__currentPlayer) {
-                return [];
+            if (activeBiyFigure && from.id === activeBiyFigure.id && from.figure.color === this.__currentPlayer) {
+                const captureMoves = this.getCaptureMoves(activeBiyFigure);
+                const normalMoves = this.getNormalMoves(activeBiyFigure);
+                const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE);
+                return [...captureMoves, ...normalMoves, ...extractionMoves];
             }
+        }
 
-            const captureMoves = this.getCaptureMoves(activeBiyFigure);
-            const normalMoves = this.getNormalMoves(activeBiyFigure);
-            const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE);
+        const hasShatraCapture = this.hasShatraForcedCapture();
+        const hasBaatyrCapture = this.hasBaatyrForcedCapture();
+        const hasBiyCapture = this.getFiguresWithCaptures('biy').length > 0;
+        const hasAnyCapture = this.hasForcedCapture();
 
+        if (from.figure instanceof Baatyr && from.isGate() && from.figure.color === this.__currentPlayer) {
+
+            const captureMoves = this.getCaptureMoves(from);
+            const normalMoves = this.getNormalMoves(from);
+            const extractionMoves = from.isEnemyFortress()
+                ? this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE)
+                : this.getEmptyMiddleZoneCells(from.figure.color);
 
 
             return [...captureMoves, ...normalMoves, ...extractionMoves];
         }
-
-        const hasShatraCapture = this.hasShatraForcedCapture();
-        const hasAnyCapture = this.hasForcedCapture();
 
 
         if (hasAnyCapture) {
@@ -874,31 +1303,64 @@ export class Board {
                 if (this.canFigureCapture(from)) {
                     return this.getCaptureMoves(from);
                 }
-                return []
-            } else {
+                return [];
+            }
+            else if (hasBiyCapture && !hasBaatyrCapture) {
                 if (from.figure instanceof Biy) {
                     if (this.canFigureCapture(from)) {
                         return [...this.getCaptureMoves(from), ...this.getNormalMoves(from)];
                     } else {
                         return this.getNormalMoves(from);
                     }
-                } else {
-                    return [];
                 }
+                return [];
             }
+            else if (hasBaatyrCapture && !hasBiyCapture) {
+                if (from.figure instanceof Baatyr) {
+                    if (this.canFigureCapture(from)) {
+                        return this.getCaptureMoves(from);
+                    }
+                }
+                return [];
+            }
+            else if (hasBiyCapture && hasBaatyrCapture) {
+                if (from.figure instanceof Biy || from.figure instanceof Baatyr) {
+                    if (this.canFigureCapture(from)) {
+                        return this.getCaptureMoves(from);
+                    }
+                }
+                return [];
+            }
+        }
+
+        if (from.figure instanceof Shatra && from.isOwnFortress(from.figure.color)) {
+            if (!this.isReserveTurn(from)) {
+                return [];
+            }
+            return this.getEmptyMiddleZoneCells(from.figure.color);
+        }
+
+
+        if (from.figure instanceof Baatyr && from.isOwnFortress(from.figure.color) && from.figure.color === this.__currentPlayer) {
+            const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color);
+            const normalMoves = this.getNormalMoves(from);
+
+
+            return [...extractionMoves, ...normalMoves];
         }
 
 
         const playerState = this.reserveState[from.figure.color];
 
         if (playerState.orderViolated) {
-
             if (this.isReserveTurn(from)) {
                 const moves = this.getEmptyMiddleZoneCells(from.figure.color);
                 return moves;
             }
             return [];
         }
+
+
 
 
 
@@ -916,6 +1378,8 @@ export class Board {
             return [...extractionMoves, ...normalMoves];
         }
 
+
+
         return this.getNormalMoves(from);
     }
 
@@ -931,7 +1395,14 @@ export class Board {
 
         possibleCoords.forEach(coord => {
             const targetCell = this.getCell(coord.x, coord.y);
+
             if (targetCell && this.isValidNormalMove(from, targetCell)) {
+                if (from.figure instanceof Biy && targetCell.isOwnFortress(from.figure.color)) {
+                    const hasReserves = this.hasReservesInFortress(from.figure.color);
+                    if (!targetCell.isGate() && hasReserves) {
+                        return;
+                    }
+                }
                 normalMoves.push(targetCell);
             }
         });
@@ -952,6 +1423,9 @@ export class Board {
         return this.getFiguresWithCaptures('shatra').length > 0;
     }
 
+    public hasBaatyrForcedCapture(): boolean {
+        return this.getFiguresWithCaptures('baatyr').length > 0;
+    }
 
     public canFigureCapture(figureCell: Cell): boolean {
         if (!figureCell.figure) return false;
@@ -961,7 +1435,7 @@ export class Board {
     }
 
 
-    public getFiguresWithCaptures(figureType?: 'shatra' | 'biy'): Cell[] {
+    public getFiguresWithCaptures(figureType?: 'shatra' | 'biy' | 'baatyr'): Cell[] {
         const currentPlayerFigures = this.currentPlayer === Player.WHITE ? this.whiteFigures : this.blackFigures;
 
         const figuresWithCapture = currentPlayerFigures.filter(cell => {
@@ -971,10 +1445,13 @@ export class Board {
                 return cell.figure instanceof Shatra;
             } else if (figureType === 'biy') {
                 return cell.figure instanceof Biy;
+            } else if (figureType === 'baatyr') {
+                return cell.figure instanceof Baatyr
             }
 
             return true;
-        })
+        });
+
 
         return figuresWithCapture;
     }
@@ -982,6 +1459,10 @@ export class Board {
 
     public getCaptureMoves(from: Cell): Cell[] {
         if (!from.figure) return [];
+
+        if (from.figure instanceof Baatyr) {
+            return this.getBaatyrCaptureMoves(from);
+        }
 
 
         const captureMoves: Cell[] = [];
@@ -1034,6 +1515,8 @@ export class Board {
         const from = this.captureSession.activeFigure;
 
 
+
+
         if (from === to && from.figure instanceof Biy) {
             this.lastMoves[this.currentPlayer] = {
                 from: from,
@@ -1049,13 +1532,43 @@ export class Board {
             return false;
         }
 
-        const dx = to.x - from.x;
-        const dy = to.y - from.y;
-        const middleX = from.x + dx / 2;
-        const middleY = from.y + dy / 2;
-        const middleCell = this.getCell(middleX, middleY);
+        let middleCell: Cell | null = null;
 
-        if (!middleCell?.figure) return false;
+        if (from.figure instanceof Baatyr) {
+            const dx = to.x - from.x;
+            const dy = to.y - from.y;
+            const dirX = dx === 0 ? 0 : dx > 0 ? 1 : -1;
+            const dirY = dy === 0 ? 0 : dy > 0 ? 1 : -1;
+
+            let distance = 1;
+            while (true) {
+                const checkX = from.x + dirX * distance;
+                const checkY = from.y + dirY * distance;
+                const checkCell = this.getCell(checkX, checkY);
+
+                if (!checkCell || checkCell === to) break;
+
+                if (checkCell.figure && checkCell.figure.color !== from.figure.color) {
+                    if (!this.captureSession.capturedFigures.includes(checkCell)) {
+                        middleCell = checkCell;
+                        break;
+                    }
+                }
+                distance++;
+            }
+        } else {
+            const dx = to.x - from.x;
+            const dy = to.y - from.y;
+            const middleX = from.x + dx / 2;
+            const middleY = from.y + dy / 2;
+            middleCell = this.getCell(middleX, middleY);
+        }
+
+
+
+        if (!middleCell?.figure) {
+            return false
+        };
 
         this.captureSession.capturedFigures.push(middleCell);
 
@@ -1064,6 +1577,14 @@ export class Board {
 
 
         this.captureSession.activeFigure = to;
+
+        if (to.isEnemyBiyPosition(to.figure!.color) || to.isGate()) {
+            this.captureSession.reachedBiyPosition = true;
+            this.captureSession.biyRightsActivated = true;
+            this.__gameState = GameState.BIY_RIGHTS_ACTIVE;
+            this.setActiveBiyFigure(to.figure!.color, to);
+            return true;
+        }
 
         if (this.__gameState === GameState.BIY_RIGHTS_ACTIVE &&
             !to.isEnemyBiyPosition(to.figure!.color)) {
@@ -1076,6 +1597,11 @@ export class Board {
             this.captureSession.biyRightsActivated = true;
             this.__gameState = GameState.BIY_RIGHTS_ACTIVE;
             this.setActiveBiyFigure(to.figure!.color, to);
+            return true;
+        }
+
+        if (!this.canContinueCapture()) {
+            this.finishCaptureChain();
             return true;
         }
 
