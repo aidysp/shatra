@@ -16,7 +16,6 @@ export abstract class Figure {
         this.logo = null;
     }
 
-    // abstract canMove(from: Cell, to: Cell): boolean;
     abstract getPossibleMoves(from: Cell, board: Board): { x: number, y: number }[];
     abstract getCaptureDirections(): { dx: number, dy: number }[];
 }

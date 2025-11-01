@@ -13,11 +13,6 @@ export class Shatra extends Figure {
         this.logo = Figures.Shatra;
     }
 
-    // canMove(from: Cell, to: Cell): boolean {
-    //     const possibleMoves = this.getPossibleMoves(from);
-    //     return possibleMoves.some(move => move.x === to.x && move.y === to.y);
-    // }
-
     getPossibleMoves(from: Cell): { x: number, y: number }[] {
         const direction = DirectionUtils.getPlayerDirection(this.color);
 

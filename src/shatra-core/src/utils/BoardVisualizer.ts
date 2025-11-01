@@ -1,7 +1,7 @@
 // src/utils/BoardVisualizer.ts
 import { Board } from "../Board";
 import { Shatra } from "../Figures/Shatra";
-// import { Biy } from "../Figures/Biy";
+import { Biy } from "../Figures/Biy";
 import { Player } from "../config/Player";
 
 export class BoardVisualizer {
@@ -27,10 +27,10 @@ export class BoardVisualizer {
                     const symbol = cell.figure.color === Player.BLACK ? 'B' : 'W';
                     row += `[${symbol}] `;
                 }
-                // else if (cell.figure instanceof Biy) {
-                // const symbol = cell.figure.color === Player.BLACK ? 'K' : 'Q';
-                // row += `[${symbol}] `;
-                // } 
+                else if (cell.figure instanceof Biy) {
+                    const symbol = cell.figure.color === Player.BLACK ? 'K' : 'Q';
+                    row += `[${symbol}] `;
+                }
                 else if (cell.figure === null) {
                     row += '[•] ';
                 } else {

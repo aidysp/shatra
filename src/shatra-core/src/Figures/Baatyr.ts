@@ -13,10 +13,6 @@ export class Baatyr extends Figure {
         this.logo = Figures.Baatyr;
     }
 
-    // canMove(from: Cell, to: Cell): boolean {
-    //     const possibleMoves = this.getPossibleMoves(from);
-    //     return possibleMoves.some(move => move.x === to.x && move.y === to.y);
-    // }
 
     getPossibleMoves(from: Cell, board: Board): { x: number, y: number }[] {
         const moves: { x: number, y: number }[] = [];

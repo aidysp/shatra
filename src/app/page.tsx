@@ -9,10 +9,9 @@ import { KonvaEventObject } from 'konva/lib/Node';
 import { Figure } from '@/shatra-core/src/Figures/Figure';
 import { Cell } from '@/shatra-core/src/Cell';
 import { flushSync } from 'react-dom';
-import { Colors } from '@/shatra-core/src/config/Colors';
 import { BoardVisualizer } from '@/shatra-core/src/utils/BoardVisualizer';
-import { Shatra } from '@/shatra-core/src/Figures/Shatra';
 import { Player } from '@/shatra-core/src/config/Player';
+
 
 
 export default function Home() {
@@ -65,29 +64,8 @@ export default function Home() {
 
     board.initCells();
     board.initFigures();
-
-    // board.setFigure(53, new Shatra("Black_Shatra_53", Player.BLACK));
-    // board.setFigure(43, new Shatra("Black_Shatra_43", Player.BLACK));
-    // board.setFigure(29, new Shatra("Black_Shatra_29", Player.BLACK));
-    // board.setFigure(30, new Shatra("Black_Shatra_30", Player.BLACK));
-    // board.setFigure(11, new Shatra("Black_Shatra_11", Player.BLACK));
-
-    // board.setFigure(32, new Shatra("White_Shatra_32", Player.WHITE));
-    // board.setFigure(55, new Shatra("White_Shatra_55", Player.WHITE));
-    // board.setFigure(56, new Shatra("White_Shatra_56", Player.WHITE));
-    // board.setFigure(57, new Shatra("White_Shatra_57", Player.WHITE));
-    // board.setFigure(58, new Shatra("White_Shatra_58", Player.WHITE));
-    // board.setFigure(59, new Shatra("White_Shatra_59", Player.WHITE));
-    // board.setFigure(60, new Shatra("White_Shatra_60", Player.WHITE));
-    // board.setFigure(61, new Shatra("White_Shatra_61", Player.WHITE));
-    // board.setFigure(62, new Shatra("White_Shatra_62", Player.WHITE));
-    // board.setFigure(38, new Shatra("White_Shatra_38", Player.WHITE));
-
-    // console.log("This is board", board);
-
-
     BoardVisualizer.printBoard(board, Player.BLACK);
-    board.printCells();
+
     setShatraBoard(board);
   }, []);
 
@@ -169,7 +147,6 @@ export default function Home() {
 
 
   const handleCellClick = (cell: Cell) => {
-    console.log(shatraBoard);
     if (selectedCell?.id === cell.id) {
       return;
     }

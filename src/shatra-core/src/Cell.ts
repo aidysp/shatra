@@ -27,6 +27,14 @@ export class Cell {
         this.figure = figure;
     }
 
+
+    public isFortress() {
+        if (this.y >= 10) return true;
+        if (this.y <= 3) return true;
+
+        return false;
+    }
+
     public isOwnFortress(player: Player): boolean {
         if (player === Player.BLACK) {
             return this.y <= 3;
@@ -36,8 +44,8 @@ export class Cell {
     }
 
     public isReserveFigure(): boolean {
-        if (!this.figure) return false;
-        return this.figure instanceof Shatra && this.isOwnFortress(this.figure.color);
+        if (!this.figure || !(this.figure instanceof Shatra)) return false;
+        return this.isOwnFortress(this.figure.color);
     }
 
     public isEnemyFortress(): boolean {
