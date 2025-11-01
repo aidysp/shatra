@@ -79,6 +79,7 @@ export default function Home() {
 
   const [draggedPiece, setDraggedPiece] = useState<DraggedPiece | null>(null);
   const [availableMoves, setAvailableMoves] = useState<number[]>([]);
+  const [captureMoves, setCaptureMoves] = useState<number[]>([]);
   const [hoveredCell, setHoveredCell] = useState<number | null>(null);
   const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
 
@@ -126,6 +127,7 @@ export default function Home() {
 
     setAnimatingFigure(animatingFigure);
     setAvailableMoves([]);
+    setCaptureMoves([]);
     setSelectedCell(null);
   }
 
@@ -157,10 +159,21 @@ export default function Home() {
       setSelectedCell(cell);
 
       const moves = shatraBoard.getAvailableMoves(cell);
-      setAvailableMoves(moves.map(c => c.id));
+      const normalMoves: number[] = [];
+      const captureMovesList: number[] = [];
+
+      moves.forEach(moveCell => {
+        if (shatraBoard.isValidCaptureMove(cell, moveCell)) {
+          captureMovesList.push(moveCell.id);
+        } else {
+          normalMoves.push(moveCell.id);
+        }
+      });
+      setAvailableMoves(normalMoves);
+      setCaptureMoves(captureMovesList);
     }
 
-    else if (selectedCell && availableMoves.includes(cell.id)) {
+    else if (selectedCell && (availableMoves.includes(cell.id) || captureMoves.includes(cell.id))) {
 
       performMoveWithAnimation(selectedCell, cell);
     }
@@ -168,6 +181,7 @@ export default function Home() {
     else {
       setSelectedCell(null);
       setAvailableMoves([]);
+      setCaptureMoves([]);
     }
   };
 
@@ -182,7 +196,7 @@ export default function Home() {
 
     const nearestCell = findNearestCell(pos.x, pos.y);
 
-    if (nearestCell && availableMoves.includes(nearestCell.id)) {
+    if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
       setHoveredCell(nearestCell.id);
     } else {
       setHoveredCell(null);
@@ -209,7 +223,19 @@ export default function Home() {
       const fromCell = shatraBoard.getCellById(cellId);
       if (fromCell && fromCell.figure) {
         const moves = shatraBoard.getAvailableMoves(fromCell);
-        setAvailableMoves(moves.map(cell => cell.id));
+        const normalMoves: number[] = [];
+        const captureMovesList: number[] = [];
+
+        moves.forEach(moveCell => {
+          if (shatraBoard.isValidCaptureMove(fromCell, moveCell)) {
+            captureMovesList.push(moveCell.id);
+          } else {
+            normalMoves.push(moveCell.id);
+          }
+        });
+
+        setAvailableMoves(normalMoves);
+        setCaptureMoves(captureMovesList);
       }
     }
   }
@@ -223,7 +249,7 @@ export default function Home() {
     const nearestCell = findNearestCell(pos.x, pos.y);
 
 
-    if (nearestCell && availableMoves.includes(nearestCell.id)) {
+    if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
       setHoveredCell(nearestCell.id);
     } else {
       setHoveredCell(null);
@@ -257,7 +283,7 @@ export default function Home() {
 
     const nearestCell = findNearestCell(pos.x, pos.y);
 
-    if (nearestCell && availableMoves.includes(nearestCell.id)) {
+    if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
       const fromCell = shatraBoard.getCellById(draggedPiece.cellId);
       const toCell = nearestCell;
 
@@ -274,6 +300,7 @@ export default function Home() {
 
         setHoveredCell(null);
         setAvailableMoves([]);
+        setCaptureMoves([]);
         setDraggedPiece(null);
         setSelectedCell(null);
         return;
@@ -287,6 +314,7 @@ export default function Home() {
 
     setHoveredCell(null);
     setAvailableMoves([]);
+    setCaptureMoves([]);
     setDraggedPiece(null);
     setSelectedCell(null);
   };
@@ -344,6 +372,7 @@ export default function Home() {
                     handleDragMove={handleDragMove}
                     onMouseMove={handleMouseMove}
                     isAvailableMove={availableMoves.includes(cell.id)}
+                    isCaptureMove={captureMoves.includes(cell.id)}
                     isHovered={hoveredCell === cell.id}
                     isSelected={selectedCell?.id === cell.id}
                     isAnimating={isAnimating}

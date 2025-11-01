@@ -12,13 +12,14 @@ interface FieldProps {
   color: Colors,
   children: React.ReactNode;
   isAvailableMove?: boolean;
+  isCaptureMove?: boolean;
   isHovered?: boolean;
   isSelected?: boolean;
   onClick?: () => void;
   onMouseMove?: (e: KonvaEventObject<MouseEvent>) => void;
 }
 
-const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMove, isHovered, onClick, onMouseMove }) => {
+const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMove, isCaptureMove, isHovered, onClick, onMouseMove }) => {
   return (
     <Group
       x={x * 40}
@@ -46,15 +47,30 @@ const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMov
       )}
 
 
-      {isAvailableMove && (
+      {isCaptureMove && (
+        <Circle
+          x={20}
+          y={20}
+          radius={5}
+          fill="#FF073A"
+          opacity={1}
+          stroke="#FF073A"
+          strokeWidth={3}
+          shadowColor="#FF073A"
+          shadowBlur={10}
+          shadowOpacity={0.8}
+        />
+      )}
+
+      {isAvailableMove && !isCaptureMove && (
         <Circle
           x={20}
           y={20}
           radius={5}
           fill="#0D83CD"
-          opacity={0.8}
+          opacity={0.6}
           stroke="#0D83CD"
-          strokeWidth={1.5}
+          strokeWidth={1}
         />
       )}
       <Text
