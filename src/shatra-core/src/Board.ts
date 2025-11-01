@@ -480,7 +480,7 @@ export class Board {
         return false;
     }
 
-    private isValidCaptureMove(from: Cell, to: Cell): boolean {
+    public isValidCaptureMove(from: Cell, to: Cell): boolean {
 
         if (from.figure instanceof Baatyr) {
             const result = this.isValidBaatyrCaptureMove(from, to);
