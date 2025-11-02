@@ -1,16 +1,21 @@
 
-import { Colors } from "../config/Colors";
+import { Board } from "../Board";
+import { Cell } from "../Cell";
 import { Figures } from "../config/Figures";
+import { Player } from "../config/Player";
 
 
-export class Figure {
+export abstract class Figure {
     id: string;
-    color: Colors;
+    color: Player;
     logo: Figures | null
 
-    constructor(id: string, color: Colors) {
+    constructor(id: string, color: Player) {
         this.id = id;
         this.color = color;
         this.logo = null;
     }
+
+    abstract getPossibleMoves(from: Cell, board: Board): { x: number, y: number }[];
+    abstract getCaptureDirections(): { dx: number, dy: number }[];
 }

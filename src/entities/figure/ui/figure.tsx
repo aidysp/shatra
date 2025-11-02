@@ -1,5 +1,6 @@
-import { Colors } from "@/shatra-core/src/config/Colors";
 import { Figures } from "@/shatra-core/src/config/Figures";
+import { Player } from "@/shatra-core/src/config/Player";
+import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
 import { Image } from "react-konva";
@@ -8,12 +9,19 @@ import useImage from "use-image";
 
 
 type FigureProps = {
-  color: Colors | undefined;
+  color: Player | undefined;
   figure: Figures | null | undefined;
   onDragStart: (e: KonvaEventObject<DragEvent>) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
   onMouseOver: (e: KonvaEventObject<MouseEvent>) => void;
   onMouseOut: (e: KonvaEventObject<MouseEvent>) => void;
+  onDragMove: (e: KonvaEventObject<DragEvent>) => void;
+  isAnimating?: boolean;
+  targetX?: number;
+  targetY?: number;
+  cellX: number;
+  cellY: number;
+  onAnimationComplete?: () => void;
 }
 
 
@@ -38,26 +46,71 @@ const FigureLogo: React.FC<FigureProps> = ({
   onDragStart,
   onDragEnd,
   onMouseOver,
-  onMouseOut
+  onMouseOut,
+  onDragMove,
+  isAnimating = false,
+  targetX,
+  targetY,
+  cellX,
+  cellY,
+  onAnimationComplete,
 }) => {
 
 
 
-  const figureRef = React.useRef(null);
+  const figureRef = React.useRef<Konva.Image>(null);
+
+
+  React.useEffect(() => {
+    if (isAnimating && figureRef.current && targetX !== undefined && targetY !== undefined) {
+
+      const stage = figureRef.current.getStage();
+
+      if (stage) {
+        const tempLayer = stage.findOne('#temp-layer');
+
+        if (tempLayer) {
+          figureRef.current.moveTo(tempLayer);
+        }
+      }
+
+      const absoluteX = cellX * 40 + 5;
+      const absoluteY = cellY * 40 + 5;
+
+
+
+
+      figureRef.current.position({ x: absoluteX, y: absoluteY });
+
+      figureRef.current.to({
+        x: targetX,
+        y: targetY,
+        duration: 0.2,
+        easing: Konva.Easings.EaseInOut,
+        onFinish: () => {
+          onAnimationComplete?.()
+        }
+      });
+    }
+  }, [onAnimationComplete, isAnimating, targetX, targetY, figure, cellX, cellY]);
+
 
   const figureMap = new Map([
-    [`${Figures.Baatyr}-${Colors.BLACK}`, blackBaatyr],
-    [`${Figures.Baatyr}-${Colors.WHITE}`, whiteBaatyr],
-    [`${Figures.Shatra}-${Colors.BLACK}`, blackShatra],
-    [`${Figures.Shatra}-${Colors.WHITE}`, whiteShatra],
-    [`${Figures.Biy}-${Colors.BLACK}`, blackBiy],
-    [`${Figures.Biy}-${Colors.WHITE}`, whiteBiy]
+    [`${Figures.Baatyr}-${Player.BLACK}`, blackBaatyr],
+    [`${Figures.Baatyr}-${Player.WHITE}`, whiteBaatyr],
+    [`${Figures.Shatra}-${Player.BLACK}`, blackShatra],
+    [`${Figures.Shatra}-${Player.WHITE}`, whiteShatra],
+    [`${Figures.Biy}-${Player.BLACK}`, blackBiy],
+    [`${Figures.Biy}-${Player.WHITE}`, whiteBiy]
   ]);
+
+
 
   const currentFigure = figureMap.get(`${figure}-${color}`) || '';
 
   const url = svgToURL(currentFigure);
   const [image] = useImage(url);
+
 
   if (!image) return null;
 
@@ -74,9 +127,13 @@ const FigureLogo: React.FC<FigureProps> = ({
       onMouseOut={onMouseOut}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onDragMove={onDragMove}
       draggable
     />
   );
 };
 
+
 export { FigureLogo };
+
+

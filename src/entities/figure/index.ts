@@ -1,1 +1,1 @@
-export {FigureLogo} from "./ui/figure" 
+export { FigureLogo } from "./ui/figure" 

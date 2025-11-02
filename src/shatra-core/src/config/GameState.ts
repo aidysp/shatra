@@ -1,0 +1,8 @@
+export enum GameState {
+    NORMAL,
+    FORCED_CAPTURE,
+    ACTIVE_CAPTURE_CHAIN,
+    BIY_RIGHTS_ACTIVE,
+    BIY_FORCED_MOVE,
+    GAME_OVER
+}

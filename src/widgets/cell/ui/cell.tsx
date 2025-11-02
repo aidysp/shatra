@@ -2,19 +2,9 @@ import { Field } from "@/entities/field";
 import { FigureLogo } from "@/entities/figure";
 import { Colors } from "@/shatra-core/src/config/Colors";
 import { Figures } from "@/shatra-core/src/config/Figures";
+import { Player } from "@/shatra-core/src/config/Player";
 import { KonvaEventObject } from "konva/lib/Node";
 
-
-type CellWidgetProps = {
-  id: number,
-  x: number,
-  y: number,
-  color: Colors,
-  figureColor: Colors | undefined,
-  figure: Figures | null | undefined,
-  handleDragStart: (e: KonvaEventObject<DragEvent>) => void,
-  handleDragEnd: (e: KonvaEventObject<DragEvent>) => void
-};
 
 
 const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {
@@ -31,6 +21,30 @@ const handleMouseOut = (e: KonvaEventObject<MouseEvent>) => {
   }
 };
 
+type CellWidgetProps = {
+  id: number;
+  x: number;
+  y: number;
+  color: Colors;
+  figureColor: Player | undefined;
+  figure: Figures | null | undefined;
+  handleDragStart: (e: KonvaEventObject<DragEvent>) => void;
+  handleDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  handleDragMove: (e: KonvaEventObject<DragEvent>) => void;
+  onMouseMove?: (e: KonvaEventObject<MouseEvent>) => void;
+  isAvailableMove: boolean;
+  isCaptureMove: boolean;
+  isHovered?: boolean;
+  isSelected?: boolean;
+  onClick?: () => void;
+
+  isAnimating?: boolean;
+  targetX?: number;
+  targetY?: number;
+  onAnimationComplete?: () => void;
+};
+
+
 const CellWidget: React.FC<CellWidgetProps> = ({
   id,
   x,
@@ -39,7 +53,18 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   figureColor,
   figure,
   handleDragStart,
-  handleDragEnd
+  handleDragEnd,
+  isAvailableMove,
+  isCaptureMove,
+  handleDragMove,
+  onMouseMove,
+  isHovered,
+  isSelected,
+  onClick,
+  isAnimating,
+  targetX,
+  targetY,
+  onAnimationComplete
 }) => {
 
 
@@ -50,16 +75,31 @@ const CellWidget: React.FC<CellWidgetProps> = ({
       x={x}
       y={y}
       color={color}
-
+      isAvailableMove={isAvailableMove}
+      isCaptureMove={isCaptureMove}
+      isHovered={isHovered}
+      isSelected={isSelected}
+      onClick={onClick}
+      onMouseMove={onMouseMove}
     >
-      <FigureLogo
-        color={figureColor}
-        figure={figure}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onMouseOver={handleMouseOver}
-        onMouseOut={handleMouseOut}
-      />
+      {
+        figure && figureColor && (
+          <FigureLogo
+            color={figureColor}
+            figure={figure}
+            isAnimating={isAnimating}
+            targetX={targetX}
+            targetY={targetY}
+            cellX={x}
+            cellY={y}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragMove={handleDragMove}
+            onMouseOver={handleMouseOver}
+            onMouseOut={handleMouseOut}
+            onAnimationComplete={onAnimationComplete}
+          />
+        )}
     </Field>
   );
 };
