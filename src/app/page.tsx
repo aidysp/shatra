@@ -13,6 +13,7 @@ import { BoardVisualizer } from '@/shatra-core/src/utils/BoardVisualizer';
 import { Player } from '@/shatra-core/src/config/Player';
 import { Biy } from '@/shatra-core/src/Figures/Biy';
 import { Shatra } from '@/shatra-core/src/Figures/Shatra';
+import { Baatyr } from '@/shatra-core/src/Figures/Baatyr';
 
 
 
@@ -65,13 +66,25 @@ export default function Home() {
     const board = new Board();
 
     board.initCells();
-    board.initFigures();
+    // board.initFigures();
 
     // board.setFigure(7, new Biy("7", Player.BLACK));
     // board.setFigure(20, new Shatra("7", Player.WHITE));
     // board.setFigure(25, new Shatra("7", Player.BLACK));
     // board.setFigure(39, new Shatra("7", Player.WHITE));
     // board.setFigure(46, new Biy("7", Player.WHITE));
+
+
+    board.setFigure(25, new Shatra("25", Player.BLACK));
+    board.setFigure(11, new Baatyr("11", Player.WHITE));
+    board.setFigure(17, new Baatyr("17", Player.WHITE));
+    board.setFigure(15, new Baatyr("15", Player.WHITE));
+
+    board.setFigure(24, new Baatyr("24", Player.BLACK));
+    board.setFigure(46, new Baatyr("46", Player.BLACK));
+
+
+
 
 
 
