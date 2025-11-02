@@ -11,6 +11,8 @@ import { Cell } from '@/shatra-core/src/Cell';
 import { flushSync } from 'react-dom';
 import { BoardVisualizer } from '@/shatra-core/src/utils/BoardVisualizer';
 import { Player } from '@/shatra-core/src/config/Player';
+import { Biy } from '@/shatra-core/src/Figures/Biy';
+import { Shatra } from '@/shatra-core/src/Figures/Shatra';
 
 
 
@@ -64,6 +66,15 @@ export default function Home() {
 
     board.initCells();
     board.initFigures();
+
+    // board.setFigure(7, new Biy("7", Player.BLACK));
+    // board.setFigure(20, new Shatra("7", Player.WHITE));
+    // board.setFigure(25, new Shatra("7", Player.BLACK));
+    // board.setFigure(39, new Shatra("7", Player.WHITE));
+    // board.setFigure(46, new Biy("7", Player.WHITE));
+
+
+
     BoardVisualizer.printBoard(board, Player.BLACK);
 
     setShatraBoard(board);
