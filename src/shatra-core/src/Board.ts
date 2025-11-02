@@ -493,7 +493,12 @@ export class Board {
 
 
         if (from.figure instanceof Biy || from.figure instanceof Shatra) {
-            if (Math.abs(dx) !== 2 && Math.abs(dy) !== 2) {
+            const isExactlyTwoCells =
+                (Math.abs(dx) === 2 && Math.abs(dy) === 0) ||  // horizontally by 2
+                (Math.abs(dx) === 0 && Math.abs(dy) === 2) ||  // vertically by 2
+                (Math.abs(dx) === 2 && Math.abs(dy) === 2);    // diagonally by 2
+
+            if (!isExactlyTwoCells) {
                 return false;
             }
         }
@@ -1274,6 +1279,7 @@ export class Board {
                 return [];
             }
 
+            return [];
         }
 
         const playerState = this.reserveState[from.figure!.color];
