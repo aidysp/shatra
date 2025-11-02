@@ -66,7 +66,7 @@ export default function Home() {
     const board = new Board();
 
     board.initCells();
-    // board.initFigures();
+    board.initFigures();
 
     // board.setFigure(7, new Biy("7", Player.BLACK));
     // board.setFigure(20, new Shatra("7", Player.WHITE));
@@ -75,13 +75,12 @@ export default function Home() {
     // board.setFigure(46, new Biy("7", Player.WHITE));
 
 
-    board.setFigure(25, new Shatra("25", Player.BLACK));
-    board.setFigure(11, new Baatyr("11", Player.WHITE));
-    board.setFigure(17, new Baatyr("17", Player.WHITE));
-    board.setFigure(15, new Baatyr("15", Player.WHITE));
+    // board.setFigure(7, new Shatra("25", Player.WHITE));
+    // board.setFigure(8, new Shatra("11", Player.WHITE));
+    // board.setFigure(9, new Shatra("17", Player.WHITE));
+    // board.setFigure(13, new Baatyr("15", Player.BLACK));
 
-    board.setFigure(24, new Baatyr("24", Player.BLACK));
-    board.setFigure(46, new Baatyr("46", Player.BLACK));
+    // board.setFigure(15, new Baatyr("24", Player.BLACK));
 
 
 
