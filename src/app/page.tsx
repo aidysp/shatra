@@ -344,6 +344,7 @@ export default function Home() {
             width={280}
             height={560}
             onClick={handleStageClick}
+            onTap={handleStageClick}
           >
             <Layer>
               {
