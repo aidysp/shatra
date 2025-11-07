@@ -25,7 +25,7 @@ const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMov
       x={x * 40}
       y={y * 40}
       onClick={onClick}
-      tap={onClick}
+      onTap={onClick}
       onMouseMove={onMouseMove}
     >
       <Rect
