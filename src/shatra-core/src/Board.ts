@@ -12,7 +12,7 @@ export class Board {
     protected cells: Cell[] = [];
     protected whiteFigures: Cell[] = [];
     protected blackFigures: Cell[] = [];
-    private __currentPlayer: Player = Player.WHITE;
+    public __currentPlayer: Player = Player.WHITE;
     private __gameState: GameState = GameState.NORMAL;
     private activeWhiteBiyFigure: Cell | null = null;
     private activeBlackBiyFigure: Cell | null = null;
@@ -902,7 +902,6 @@ export class Board {
     public makeMove(from: Cell, to: Cell): boolean {
 
 
-
         if (!this.isValidMove(from, to)) {
             return false;
         }
@@ -963,6 +962,7 @@ export class Board {
                 this.updateReserveOrderState();
                 return true;
             }
+
 
             return success;
         }
@@ -1179,6 +1179,7 @@ export class Board {
     }
 
     public getAvailableMoves(from: Cell): Cell[] {
+        this.updateReserveOrderState();
         if (this.__gameState === GameState.NORMAL) {
             this.checkForcedBiyMove();
         }
