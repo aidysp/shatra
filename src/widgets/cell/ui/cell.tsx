@@ -33,11 +33,11 @@ type CellWidgetProps = {
   handleDragMove: (e: KonvaEventObject<DragEvent>) => void;
   onMouseMove?: (e: KonvaEventObject<MouseEvent>) => void;
   isAvailableMove: boolean;
+  isLastMove?: boolean;
   isCaptureMove: boolean;
   isHovered?: boolean;
   isSelected?: boolean;
   onClick?: () => void;
-
   isAnimating?: boolean;
   targetX?: number;
   targetY?: number;
@@ -55,6 +55,7 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   handleDragStart,
   handleDragEnd,
   isAvailableMove,
+  isLastMove,
   isCaptureMove,
   handleDragMove,
   onMouseMove,
@@ -76,6 +77,7 @@ const CellWidget: React.FC<CellWidgetProps> = ({
       y={y}
       color={color}
       isAvailableMove={isAvailableMove}
+      isLastMove={isLastMove}
       isCaptureMove={isCaptureMove}
       isHovered={isHovered}
       isSelected={isSelected}
