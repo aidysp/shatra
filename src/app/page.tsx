@@ -12,6 +12,7 @@ import { flushSync } from 'react-dom';
 import { BoardVisualizer } from '@/shatra-core/src/utils/BoardVisualizer';
 import { Player } from '@/shatra-core/src/config/Player';
 import { GameState } from '@/shatra-core/src/config/GameState';
+import { Biy } from '@/shatra-core/src/Figures/Biy';
 
 
 
@@ -427,7 +428,8 @@ export default function Home() {
     }
 
     if (nearestCell && nearestCell.id === fromCell.id) {
-      if (shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+      if (shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE ||
+        (fromCell.figure instanceof Biy)) {
         const tempBoard = shatraBoard.clone();
         const tempFrom = tempBoard.getCellById(fromCell.id)!;
 
