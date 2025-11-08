@@ -92,8 +92,12 @@ export class Board {
         }
 
         if (from === to) {
-            this.finishBiyRightsSession();
-            return true;
+            if (from.isEnemyBiyPosition(from.figure.color) || from.isGate()) {
+                this.finishBiyRightsSession();
+                return true;
+            } else {
+                return false;
+            }
         }
 
         if (this.isValidCaptureMove(from, to)) {
@@ -961,6 +965,11 @@ export class Board {
     }
 
     public hasMoveIntersection(from: Cell, to: Cell): boolean {
+
+        if (this.gameState === GameState.ACTIVE_CAPTURE_CHAIN || this.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+            return false;
+        }
+
         if (!this.isValidMove(from, to)) {
             return false;
         }
@@ -977,8 +986,15 @@ export class Board {
     }
 
     public makeNormalMove(from: Cell, to: Cell): boolean {
+        if (!from.figure) {
+            return false;
+        }
         to.figure = from.figure;
         from.figure = null;
+
+        if (!to.figure) {
+            return false;
+        }
 
         if (this.checkPromotion(to)) {
             this.promoteToBaatyr(to);
@@ -987,7 +1003,7 @@ export class Board {
         this.lastMoves[this.currentPlayer] = {
             from: from,
             to: to,
-            figureId: to.figure!.id
+            figureId: to.figure.id
         };
 
         this.switchPlayer();
@@ -999,6 +1015,9 @@ export class Board {
 
     public makeMove(from: Cell, to: Cell): boolean {
 
+        if (!from.figure) {
+            return false;
+        }
 
         if (!this.isValidMove(from, to)) {
             return false;
@@ -1015,6 +1034,7 @@ export class Board {
                 return result;
             }
         }
+
 
 
         if (this.gameState === GameState.ACTIVE_CAPTURE_CHAIN &&
@@ -1035,6 +1055,8 @@ export class Board {
             this.finishCaptureChain();
             return true;
         }
+
+
 
 
 
@@ -1274,7 +1296,11 @@ export class Board {
             const currentCell = this.captureSession.activeFigure;
             const captureMoves = this.getCaptureMoves(currentCell);
 
-            if (currentCell.figure instanceof Baatyr) {
+
+
+
+
+            if (currentCell.figure instanceof Baatyr || currentCell.figure instanceof Shatra) {
                 return [currentCell, ...captureMoves];
             }
 

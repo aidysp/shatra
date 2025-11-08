@@ -11,6 +11,8 @@ import { Cell } from '@/shatra-core/src/Cell';
 import { flushSync } from 'react-dom';
 import { BoardVisualizer } from '@/shatra-core/src/utils/BoardVisualizer';
 import { Player } from '@/shatra-core/src/config/Player';
+import { GameState } from '@/shatra-core/src/config/GameState';
+
 
 
 
@@ -169,6 +171,31 @@ export default function Home() {
   }
 
   const handleCellClick = (cell: Cell) => {
+    if ((shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+      shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) &&
+      selectedCell && selectedCell.id === cell.id) {
+
+      const tempBoard = shatraBoard.clone();
+      const tempFrom = tempBoard.getCellById(selectedCell.id)!;
+
+      if (tempBoard.makeMove(tempFrom, tempFrom)) {
+        setShatraBoard(tempBoard);
+        setLastMove({
+          from: selectedCell,
+          to: selectedCell
+        });
+        playMoveSound();
+      }
+
+      setSelectedCell(null);
+      setHoveredCell(null);
+      setAvailableMoves([]);
+      setCaptureMoves([]);
+      return;
+    }
+
+
+
     if (selectedCell?.id === cell.id) {
       setSelectedCell(null);
       setHoveredCell(null);
@@ -325,9 +352,43 @@ export default function Home() {
     }
 
     const nearestCell = findNearestCell(pos.x, pos.y);
+    const fromCell = shatraBoard.getCellById(draggedPiece.cellId);
 
-    if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
-      const fromCell = shatraBoard.getCellById(draggedPiece.cellId);
+    if (!fromCell) {
+      e.target.position({
+        x: draggedPiece.originalX,
+        y: draggedPiece.originalY
+      });
+      return;
+    }
+
+    if (nearestCell && nearestCell.id === fromCell.id) {
+      if (shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+        const tempBoard = shatraBoard.clone();
+        const tempFrom = tempBoard.getCellById(fromCell.id)!;
+
+        if (tempBoard.makeMove(tempFrom, tempFrom)) {
+          setShatraBoard(tempBoard);
+          setLastMove({
+            from: fromCell,
+            to: fromCell
+          });
+          playMoveSound();
+        } else {
+          e.target.position({
+            x: draggedPiece.originalX,
+            y: draggedPiece.originalY
+          });
+        }
+      } else {
+        e.target.position({
+          x: draggedPiece.originalX,
+          y: draggedPiece.originalY
+        });
+      }
+    }
+    else if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
+
       const toCell = nearestCell;
 
       if (fromCell) {
