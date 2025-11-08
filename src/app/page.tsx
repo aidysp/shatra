@@ -16,7 +16,25 @@ import { Player } from '@/shatra-core/src/config/Player';
 
 export default function Home() {
 
-  const [shatraBoard, setShatraBoard] = useState<Board>(new Board())
+  const [shatraBoard, setShatraBoard] = useState<Board>(new Board());
+
+  const [moveChoice, setMoveChoice] = useState<{
+    show: boolean;
+    from: Cell | null;
+    to: Cell | null;
+  }>({
+    show: false,
+    from: null,
+    to: null
+  });
+
+  const [lastMove, setLastMove] = useState<{
+    from: Cell | null;
+    to: Cell | null;
+  }>({
+    from: null,
+    to: null
+  });
 
   const [windowSize, setWindowSize] = useState({
     width: 0,
@@ -127,6 +145,7 @@ export default function Home() {
     setAvailableMoves([]);
     setCaptureMoves([]);
     setSelectedCell(null);
+    setHoveredCell(null);
   }
 
 
@@ -138,6 +157,10 @@ export default function Home() {
     flushSync(() => {
       shatraBoard.makeMove(animatingFigure.fromCell, animatingFigure.toCell);
       setShatraBoard(shatraBoard.clone());
+      setLastMove({
+        from: animatingFigure.fromCell,
+        to: animatingFigure.toCell
+      });
       setAnimatingFigure(null);
     });
 
@@ -145,14 +168,17 @@ export default function Home() {
 
   }
 
-
   const handleCellClick = (cell: Cell) => {
     if (selectedCell?.id === cell.id) {
+      setSelectedCell(null);
+      setHoveredCell(null);
+      setAvailableMoves([]);
+      setCaptureMoves([]);
       return;
     }
 
 
-    if (!selectedCell && cell.figure) {
+    if (cell.figure && cell.figure.color === shatraBoard.currentPlayer) {
 
       setSelectedCell(cell);
 
@@ -161,26 +187,40 @@ export default function Home() {
       const captureMovesList: number[] = [];
 
       moves.forEach(moveCell => {
+        normalMoves.push(moveCell.id);
         if (shatraBoard.isValidCaptureMove(cell, moveCell)) {
           captureMovesList.push(moveCell.id);
-        } else {
-          normalMoves.push(moveCell.id);
         }
       });
       setAvailableMoves(normalMoves);
       setCaptureMoves(captureMovesList);
+      return;
     }
 
-    else if (selectedCell && (availableMoves.includes(cell.id) || captureMoves.includes(cell.id))) {
+    if (selectedCell) {
+      const isAvailableMove = availableMoves.includes(cell.id) || captureMoves.includes(cell.id);
 
-      performMoveWithAnimation(selectedCell, cell);
+      if (isAvailableMove) {
+
+
+        if (shatraBoard.hasMoveIntersection(selectedCell, cell)) {
+          setMoveChoice({
+            show: true,
+            from: selectedCell,
+            to: cell
+          });
+        } else {
+          performMoveWithAnimation(selectedCell, cell);
+        }
+        return;
+      }
     }
 
-    else {
-      setSelectedCell(null);
-      setAvailableMoves([]);
-      setCaptureMoves([]);
-    }
+    setSelectedCell(null);
+    setHoveredCell(null);
+    setAvailableMoves([]);
+    setCaptureMoves([]);
+
   };
 
   const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
@@ -203,6 +243,8 @@ export default function Home() {
 
 
   const createDragStartHandler = (cellId: number, figure: Figure | null | undefined, x: number, y: number) => {
+
+
     return (e: KonvaEventObject<DragEvent>) => {
       const stage = e.target.getStage();
       if (stage && stage.container()) {
@@ -233,7 +275,10 @@ export default function Home() {
         });
 
         setAvailableMoves(normalMoves);
+
         setCaptureMoves(captureMovesList);
+        setSelectedCell(null);
+        setHoveredCell(null);
       }
     }
   }
@@ -275,7 +320,7 @@ export default function Home() {
 
 
     if (!draggedPiece) {
-      // e.target.position({ x: 5, y: 5 });
+
       return;
     }
 
@@ -285,23 +330,51 @@ export default function Home() {
       const fromCell = shatraBoard.getCellById(draggedPiece.cellId);
       const toCell = nearestCell;
 
-      if (fromCell && shatraBoard.makeMove(fromCell, toCell)) {
+      if (fromCell) {
+        if (shatraBoard.hasMoveIntersection(fromCell, toCell)) {
+          setMoveChoice({
+            show: true,
+            from: fromCell,
+            to: toCell
+          });
 
-        e.target.position({
-          x: nearestCell.x * 40 + 5,
-          y: nearestCell.y * 40 + 5
-        });
+          e.target.position({
+            x: draggedPiece.originalX,
+            y: draggedPiece.originalY
+          });
 
-        setShatraBoard(shatraBoard.clone());
-        playMoveSound();
+          return;
+        }
+        else if (availableMoves.includes(toCell.id) || captureMoves.includes(toCell.id)) {
+          let moveSuccess = false;
+          const tempBoard = shatraBoard.clone();
+          const tempFrom = tempBoard.getCellById(fromCell.id)!;
+          const tempTo = tempBoard.getCellById(toCell.id)!;
 
+          if (availableMoves.includes(toCell.id)) {
+            moveSuccess = tempBoard.makeNormalMove(tempFrom, tempTo);
+          } else {
+            moveSuccess = tempBoard.makeMove(tempFrom, tempTo);
+          }
 
-        setHoveredCell(null);
-        setAvailableMoves([]);
-        setCaptureMoves([]);
-        setDraggedPiece(null);
-        setSelectedCell(null);
-        return;
+          if (moveSuccess) {
+            setShatraBoard(tempBoard);
+            e.target.position({
+              x: toCell.x * 40 + 5,
+              y: toCell.y * 40 + 5
+            });
+            setLastMove({
+              from: fromCell,
+              to: toCell
+            });
+            playMoveSound();
+          } else {
+            e.target.position({
+              x: draggedPiece.originalX,
+              y: draggedPiece.originalY
+            });
+          }
+        }
       }
     }
 
@@ -328,9 +401,65 @@ export default function Home() {
 
 
     const clickedCell = findNearestCell(pos.x, pos.y);
-    if (!clickedCell) return;
+
+    if (!clickedCell) {
+      setSelectedCell(null);
+      setHoveredCell(null);
+      setAvailableMoves([]);
+      setCaptureMoves([]);
+      return;
+    }
+
     handleCellClick(clickedCell);
   };
+
+
+  const handleNormalMove = () => {
+    if (moveChoice.from && moveChoice.to) {
+      const tempBoard = shatraBoard.clone();
+      const tempFrom = tempBoard.getCellById(moveChoice.from.id)!;
+      const tempTo = tempBoard.getCellById(moveChoice.to.id)!;
+
+      if (tempBoard.makeNormalMove(tempFrom, tempTo)) {
+        setShatraBoard(tempBoard);
+        setLastMove({
+          from: moveChoice.from,
+          to: moveChoice.to
+        });
+        playMoveSound();
+      }
+    }
+
+    setMoveChoice({ show: false, from: null, to: null });
+    setSelectedCell(null);
+    setHoveredCell(null);
+    setAvailableMoves([]);
+    setCaptureMoves([]);
+  };
+
+  const handleCaptureMove = () => {
+    if (moveChoice.from && moveChoice.to) {
+      const tempBoard = shatraBoard.clone();
+      const tempFrom = tempBoard.getCellById(moveChoice.from.id)!;
+      const tempTo = tempBoard.getCellById(moveChoice.to.id)!;
+
+      if (tempBoard.makeMove(tempFrom, tempTo)) {
+        setShatraBoard(tempBoard);
+        setLastMove({
+          from: moveChoice.from,
+          to: moveChoice.to
+        });
+        playMoveSound();
+      }
+    }
+
+    setMoveChoice({ show: false, from: null, to: null });
+    setSelectedCell(null);
+    setHoveredCell(null);
+    setAvailableMoves([]);
+    setCaptureMoves([]);
+  };
+
 
 
 
@@ -371,6 +500,7 @@ export default function Home() {
                     handleDragMove={handleDragMove}
                     onMouseMove={handleMouseMove}
                     isAvailableMove={availableMoves.includes(cell.id)}
+                    isLastMove={lastMove.from?.id === cell.id || lastMove.to?.id === cell.id}
                     isCaptureMove={captureMoves.includes(cell.id)}
                     isHovered={hoveredCell === cell.id}
                     isSelected={selectedCell?.id === cell.id}
@@ -387,6 +517,28 @@ export default function Home() {
           </Stage>
         </div>
       </div>
+
+      {moveChoice.show && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg">
+            <h3 className="text-black text-lg font-bold mb-4">Выберите тип хода</h3>
+            <div className="flex gap-4">
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded pointr"
+                onClick={handleNormalMove}
+              >
+                Обычный ход
+              </button>
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded"
+                onClick={handleCaptureMove}
+              >
+                Взять фигуру
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

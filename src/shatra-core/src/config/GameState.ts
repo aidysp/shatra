@@ -1,3 +1,5 @@
+
+
 export enum GameState {
     NORMAL,
     FORCED_CAPTURE,
@@ -6,3 +8,4 @@ export enum GameState {
     BIY_FORCED_MOVE,
     GAME_OVER
 }
+

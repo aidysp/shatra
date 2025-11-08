@@ -12,6 +12,7 @@ interface FieldProps {
   color: Colors,
   children: React.ReactNode;
   isAvailableMove?: boolean;
+  isLastMove?: boolean;
   isCaptureMove?: boolean;
   isHovered?: boolean;
   isSelected?: boolean;
@@ -19,7 +20,7 @@ interface FieldProps {
   onMouseMove?: (e: KonvaEventObject<MouseEvent>) => void;
 }
 
-const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMove, isCaptureMove, isHovered, onClick, onMouseMove }) => {
+const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMove, isLastMove, isCaptureMove, isHovered, isSelected, onClick, onMouseMove }) => {
   return (
     <Group
       x={x * 40}
@@ -28,6 +29,9 @@ const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMov
       onTap={onClick}
       onMouseMove={onMouseMove}
     >
+
+
+
       <Rect
         x={0}
         y={0}
@@ -35,6 +39,31 @@ const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMov
         height={40}
         fill={color}
       />
+
+      {isLastMove && (
+        <Rect
+          x={0}
+          y={0}
+          width={40}
+          height={40}
+          fill="#FFE55C"
+          opacity={0.5}
+        />
+      )}
+
+      {isSelected && (
+        <Rect
+          x={0}
+          y={0}
+          width={40}
+          height={40}
+          fill="#3B82F6"
+          opacity={0.3}
+        />
+
+      )}
+
+
 
       {isHovered && (
         <Rect
