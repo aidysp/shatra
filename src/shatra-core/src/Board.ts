@@ -375,7 +375,7 @@ export class Board {
             this.getEmptyMiddleZoneCells(from.figure.color).some(cell => cell.id === to.id);
     }
 
-    private isBiyInOwnFortress(cell: Cell): boolean {
+    public isBiyInOwnFortress(cell: Cell): boolean {
         if (!cell.figure || !(cell.figure instanceof Biy)) return false;
         return cell.isOwnFortress(cell.figure.color);
     }
@@ -598,6 +598,14 @@ export class Board {
         if (from === to) return false;
         if (to.figure !== null) return false;
         if (from.figure.color !== this.currentPlayer) return false;
+
+        if (from.figure instanceof Biy && this.isBiyInOwnFortress(from)) {
+            const normalMoves = from.figure.getPossibleMoves(from);
+            const isValidNormal = normalMoves.some(move => move.x === to.x && move.y === to.y);
+            const isExtractionMove = this.getEmptyMiddleZoneCells(from.figure.color).some(cell => cell.id === to.id);
+
+            return isValidNormal || isExtractionMove;
+        }
 
         if (from.figure instanceof Baatyr) {
             if (this.isValidBaatyrCaptureMove(from, to)) {
@@ -994,6 +1002,7 @@ export class Board {
         if (!from.figure) {
             return false;
         }
+
         to.figure = from.figure;
         from.figure = null;
 
@@ -1022,6 +1031,17 @@ export class Board {
 
         if (!from.figure) {
             return false;
+        }
+
+        if (from === to && from.figure instanceof Biy && this.isBiyInOwnFortress(from)) {
+            this.lastMoves[this.currentPlayer] = {
+                from: from,
+                to: from,
+                figureId: from.figure.id
+            };
+            this.switchPlayer();
+            this.updateReserveOrderState();
+            return true;
         }
 
         if (!this.isValidMove(from, to)) {
