@@ -970,6 +970,11 @@ export class Board {
             return false;
         }
 
+        const figuresWithCaptures = this.getFiguresWithCaptures();
+        if (figuresWithCaptures.length >= 2) {
+            return false;
+        }
+
         if (!this.isValidMove(from, to)) {
             return false;
         }
@@ -1279,6 +1284,8 @@ export class Board {
             } else {
                 return [];
             }
+
+
         }
 
         if (this.gameState === GameState.BIY_RIGHTS_ACTIVE) {
@@ -1319,6 +1326,8 @@ export class Board {
         return [];
     }
 
+
+
     private getBaatyrMoves(from: Cell): Cell[] {
         if (from.figure!.color !== this.__currentPlayer) return [];
         const hasBaatyrCapture = this.hasBaatyrForcedCapture();
@@ -1335,6 +1344,13 @@ export class Board {
 
                 if (!this.getCaptureMoves(from).length) {
                     return [...captureMoves];
+                }
+
+                const figuresWithCaptures = this.getFiguresWithCaptures();
+                if (figuresWithCaptures.length >= 2 && from.isGate()) {
+                    if (this.canFigureCapture(from)) {
+                        return this.getCaptureMoves(from);
+                    }
                 }
 
                 return [...captureMoves, ...extractionMoves, ...normalMoves];
@@ -1489,6 +1505,13 @@ export class Board {
                     return [...captureMoves];
                 }
 
+                const figuresWithCaptures = this.getFiguresWithCaptures();
+                if (figuresWithCaptures.length >= 2 && from.isGate()) {
+                    if (this.canFigureCapture(from)) {
+                        return this.getCaptureMoves(from);
+                    }
+                }
+
 
                 return [...captureMoves, ...extractionMoves, ...normalMoves];
             }
@@ -1622,6 +1645,24 @@ export class Board {
 
 
         return figuresWithCapture;
+    }
+
+    public getActiveCaptureFigure(): Cell | null {
+        if (this.captureSession &&
+            (this.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+                this.gameState === GameState.BIY_RIGHTS_ACTIVE)) {
+            return this.captureSession.activeFigure;
+        }
+        return null;
+    }
+
+    public getFiguresWithForcedCapture(): Cell[] {
+        if (this.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+            this.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+            return [];
+        }
+
+        return this.getFiguresWithCaptures();
     }
 
 
