@@ -1,5 +1,6 @@
 import { Field } from "@/entities/field";
 import { FigureLogo } from "@/entities/figure";
+import { Cell } from "@/shatra-core/src/Cell";
 import { Colors } from "@/shatra-core/src/config/Colors";
 import { Figures } from "@/shatra-core/src/config/Figures";
 import { Player } from "@/shatra-core/src/config/Player";
@@ -37,6 +38,8 @@ type CellWidgetProps = {
   isCaptureMove: boolean;
   isHovered?: boolean;
   isSelected?: boolean;
+  isActiveCaptureFigure?: Cell | null;
+  hasForcedCapture: boolean;
   onClick?: () => void;
   isAnimating?: boolean;
   targetX?: number;
@@ -61,6 +64,8 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   onMouseMove,
   isHovered,
   isSelected,
+  isActiveCaptureFigure,
+  hasForcedCapture,
   onClick,
   isAnimating,
   targetX,
@@ -81,6 +86,8 @@ const CellWidget: React.FC<CellWidgetProps> = ({
       isCaptureMove={isCaptureMove}
       isHovered={isHovered}
       isSelected={isSelected}
+      isActiveCaptureFigure={isActiveCaptureFigure}
+      hasForcedCapture={hasForcedCapture}
       onClick={onClick}
       onMouseMove={onMouseMove}
     >

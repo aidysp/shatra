@@ -11,12 +11,78 @@ import { Cell } from '@/shatra-core/src/Cell';
 import { flushSync } from 'react-dom';
 import { BoardVisualizer } from '@/shatra-core/src/utils/BoardVisualizer';
 import { Player } from '@/shatra-core/src/config/Player';
+import { GameState } from '@/shatra-core/src/config/GameState';
+
 
 
 
 export default function Home() {
 
   const [shatraBoard, setShatraBoard] = useState<Board>(new Board());
+  const [activeCaptureFigure, setActiveCaptureFigure] = useState<Cell | null>(null);
+
+
+  useEffect(() => {
+    if (shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+      shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+      const activeFigure = shatraBoard.getActiveCaptureFigure();
+      setActiveCaptureFigure(activeFigure);
+
+      if (activeFigure) {
+        const moves = shatraBoard.getAvailableMoves(activeFigure);
+        const normalMoves: number[] = [];
+        const captureMovesList: number[] = [];
+
+        moves.forEach(moveCell => {
+          if (shatraBoard.isValidCaptureMove(activeFigure, moveCell)) {
+            captureMovesList.push(moveCell.id);
+          } else {
+            normalMoves.push(moveCell.id);
+          }
+        });
+
+        setAvailableMoves(normalMoves);
+        setCaptureMoves(captureMovesList);
+        setSelectedCell(activeFigure);
+      }
+    } else {
+      setActiveCaptureFigure(null);
+    }
+  }, [shatraBoard]);
+
+
+  const [forcedCaptureFigures, setForcedCaptureFigures] = useState<number[]>([]);
+  useEffect(() => {
+    if (shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+      shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+      const activeFigure = shatraBoard.getActiveCaptureFigure();
+      setActiveCaptureFigure(activeFigure);
+
+      if (activeFigure) {
+        const moves = shatraBoard.getAvailableMoves(activeFigure);
+        const normalMoves: number[] = [];
+        const captureMovesList: number[] = [];
+
+        moves.forEach(moveCell => {
+          if (shatraBoard.isValidCaptureMove(activeFigure, moveCell)) {
+            captureMovesList.push(moveCell.id);
+          } else {
+            normalMoves.push(moveCell.id);
+          }
+        });
+
+        setAvailableMoves(normalMoves);
+        setCaptureMoves(captureMovesList);
+        setSelectedCell(activeFigure);
+      }
+    } else {
+      setActiveCaptureFigure(null);
+    }
+
+    const forcedFigures = shatraBoard.getFiguresWithForcedCapture();
+    const forcedFigureIds = forcedFigures.map(cell => cell.id);
+    setForcedCaptureFigures(forcedFigureIds);
+  }, [shatraBoard]);
 
   const [moveChoice, setMoveChoice] = useState<{
     show: boolean;
@@ -169,6 +235,31 @@ export default function Home() {
   }
 
   const handleCellClick = (cell: Cell) => {
+    if ((shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+      shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) &&
+      selectedCell && selectedCell.id === cell.id) {
+
+      const tempBoard = shatraBoard.clone();
+      const tempFrom = tempBoard.getCellById(selectedCell.id)!;
+
+      if (tempBoard.makeMove(tempFrom, tempFrom)) {
+        setShatraBoard(tempBoard);
+        setLastMove({
+          from: selectedCell,
+          to: selectedCell
+        });
+        playMoveSound();
+      }
+
+      setSelectedCell(null);
+      setHoveredCell(null);
+      setAvailableMoves([]);
+      setCaptureMoves([]);
+      return;
+    }
+
+
+
     if (selectedCell?.id === cell.id) {
       setSelectedCell(null);
       setHoveredCell(null);
@@ -325,9 +416,43 @@ export default function Home() {
     }
 
     const nearestCell = findNearestCell(pos.x, pos.y);
+    const fromCell = shatraBoard.getCellById(draggedPiece.cellId);
 
-    if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
-      const fromCell = shatraBoard.getCellById(draggedPiece.cellId);
+    if (!fromCell) {
+      e.target.position({
+        x: draggedPiece.originalX,
+        y: draggedPiece.originalY
+      });
+      return;
+    }
+
+    if (nearestCell && nearestCell.id === fromCell.id) {
+      if (shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+        const tempBoard = shatraBoard.clone();
+        const tempFrom = tempBoard.getCellById(fromCell.id)!;
+
+        if (tempBoard.makeMove(tempFrom, tempFrom)) {
+          setShatraBoard(tempBoard);
+          setLastMove({
+            from: fromCell,
+            to: fromCell
+          });
+          playMoveSound();
+        } else {
+          e.target.position({
+            x: draggedPiece.originalX,
+            y: draggedPiece.originalY
+          });
+        }
+      } else {
+        e.target.position({
+          x: draggedPiece.originalX,
+          y: draggedPiece.originalY
+        });
+      }
+    }
+    else if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
+
       const toCell = nearestCell;
 
       if (fromCell) {
@@ -479,7 +604,7 @@ export default function Home() {
               {
                 shatraBoard.getCells.map(cell => {
                   const isAnimating = animatingFigure?.fromCell.id === cell.id;
-
+                  const hasForcedCapture = forcedCaptureFigures.includes(cell.id);
                   const targetPos = isAnimating ? {
                     targetX: animatingFigure.toCell.x * 40 + 5,
                     targetY: animatingFigure.toCell.y * 40 + 5
@@ -504,6 +629,8 @@ export default function Home() {
                     isCaptureMove={captureMoves.includes(cell.id)}
                     isHovered={hoveredCell === cell.id}
                     isSelected={selectedCell?.id === cell.id}
+                    isActiveCaptureFigure={activeCaptureFigure}
+                    hasForcedCapture={hasForcedCapture}
                     isAnimating={isAnimating}
                     onAnimationComplete={handleAnimationComplete}
                     {...targetPos}
@@ -520,21 +647,39 @@ export default function Home() {
 
       {moveChoice.show && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg">
-            <h3 className="text-black text-lg font-bold mb-4">Выберите тип хода</h3>
-            <div className="flex gap-4">
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded pointr"
-                onClick={handleNormalMove}
-              >
-                Обычный ход
-              </button>
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded"
-                onClick={handleCaptureMove}
-              >
-                Взять фигуру
-              </button>
+          <div
+            className="absolute inset-0 bg-black opacity-80"
+            onClick={() => setMoveChoice({ show: false, from: null, to: null })}
+          ></div>
+
+          <div className="bg-white rounded-lg relative z-10">
+            {/* Кнопка закрытия */}
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold cursor-pointer"
+              onClick={() => setMoveChoice({ show: false, from: null, to: null })}
+            >
+              ×
+            </button>
+            <div className="bg-white p-6 rounded-lg">
+
+
+
+              <h3 className="text-black text-lg font-bold mb-4">Выберите тип хода</h3>
+              <div className="flex gap-4">
+
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer"
+                  onClick={handleNormalMove}
+                >
+                  Обычный ход
+                </button>
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded cursor-pointer"
+                  onClick={handleCaptureMove}
+                >
+                  Взять фигуру
+                </button>
+              </div>
             </div>
           </div>
         </div>
