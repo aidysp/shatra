@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@cspell/dict-ru_ru": "^2.3.2",
     "canvas": "^3.2.0",
     "konva": "^9.3.22",
     "next": "15.4.6",

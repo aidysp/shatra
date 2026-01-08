@@ -655,7 +655,6 @@ export default function Home() {
           ></div>
 
           <div className="bg-white rounded-lg relative z-10">
-            {/* Кнопка закрытия */}
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold cursor-pointer"
               onClick={() => setMoveChoice({ show: false, from: null, to: null })}
