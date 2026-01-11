@@ -1,121 +1,422 @@
-import { Cell } from "../../Cell";
-import { Colors } from "../../config/Colors"
+import { Board } from "../../Board"
 import { Figures } from "../../config/Figures";
+import { Player } from "../../config/Player";
 import { Shatra } from "../Shatra";
 
 
-describe('Shatra', () => {
-    describe('getPossibleMoves', () => {
-        test('should return correct moves for BLACK shatra', () => {
-            const blackShatra = new Shatra('black1', Colors.BLACK);
-            const fromCell = new Cell(1, 3, 5, Colors.BLACK, blackShatra);
 
-            const moves = blackShatra.getPossibleMoves(fromCell);
+describe("Shatra Figure tests", () => {
+    describe("Basic Movement for white shatra", () => {
+        let board: Board;
 
-            expect(moves).toEqual([
-                { x: 3, y: 6 }, // вперед (вниз)
-                { x: 2, y: 6 }, // влево-вперед
-                { x: 4, y: 6 }, // вправо-вперед
-                { x: 2, y: 5 }, // влево
-                { x: 4, y: 5 }  // вправо
-            ]);
+        beforeEach(() => {
+            board = new Board();
+            board.initCells();
         });
 
-        test('should return correct moves for WHITE shatra', () => {
-            const whiteShatra = new Shatra('white-1', Colors.WHITE);
-            const fromCell = new Cell(1, 3, 5, Colors.WHITE, whiteShatra);
 
-            const moves = whiteShatra.getPossibleMoves(fromCell);
+        test("Shatra can move one cell from starting position", () => {
+            board.initFigures();
+            const from = board.getCell(5, 8)!;
 
-            expect(moves).toEqual([
-                { x: 3, y: 4 }, // вперед (вверх)
-                { x: 2, y: 4 }, // влево-вперед
-                { x: 4, y: 4 }, // вправо-вперед
-                { x: 2, y: 5 }, // влево
-                { x: 4, y: 5 }  // вправо
-            ]);
+            expect(from.figure).toBeInstanceOf(Shatra);
+            expect(from.figure!.color).toBe(Player.WHITE);
+
+
+            const moves = board.getAvailableMoves(from!);
+
+            expect(moves).toContain(board.getCell(6, 7));
+            expect(moves).toContain(board.getCell(5, 7));
+            expect(moves).toContain(board.getCell(4, 7));
+
         });
 
-        test('should return moves from edge position', () => {
-            const shatra = new Shatra('test', Colors.BLACK);
-            const fromCell = new Cell(1, 0, 0, Colors.BLACK, shatra);
+        test("Shatra in reserve can move from starting position", () => {
+            board.initFigures();
+            const from = board.getCell(2, 11)!;
 
-            const moves = shatra.getPossibleMoves(fromCell);
+            expect(from.figure).toBeInstanceOf(Shatra);
+            expect(from.figure!.color).toBe(Player.WHITE);
 
-            expect(moves).toEqual([
-                { x: 0, y: 1 }, // вперед
-                { x: -1, y: 1 }, // влево-вперед (может быть за доской)
-                { x: 1, y: 1 }, // вправо-вперед
-                { x: -1, y: 0 }, // влево (может быть за доской)
-                { x: 1, y: 0 }  // вправо
-            ]);
+            const moves = board.getAvailableMoves(from!);
+
+            expect(moves).toContain(board.getCell(0, 7));
+            expect(moves).toContain(board.getCell(1, 7));
+            expect(moves).toContain(board.getCell(2, 7));
+            expect(moves).toContain(board.getCell(3, 7));
+            expect(moves).toContain(board.getCell(4, 7));
+            expect(moves).toContain(board.getCell(5, 7));
+            expect(moves).toContain(board.getCell(6, 7));
+
         });
 
-        describe('canMove', () => {
-            test('should return true for valid moves - BLACK', () => {
-                const blackShatra = new Shatra('black-1', Colors.BLACK);
-                const fromCell = new Cell(1, 3, 5, Colors.BLACK, blackShatra);
+        test("Shatra that is in reserve cannot be moved unless it is its turn", () => {
+            board.initFigures();
+            const fromCells = [board.getCell(3, 11)!, board.getCell(4, 11)!, board.getCell(2, 12)!, board.getCell(3, 12)!, board.getCell(4, 12)!, board.getCell(2, 13)!, board.getCell(3, 13)!, board.getCell(2, 13)!];
 
-                // Valid moves
-                expect(blackShatra.canMove(fromCell, new Cell(2, 3, 6, Colors.WHITE, null))).toBe(true); // вперед
-                expect(blackShatra.canMove(fromCell, new Cell(2, 2, 6, Colors.WHITE, null))).toBe(true); // влево-вперед
-                expect(blackShatra.canMove(fromCell, new Cell(2, 4, 6, Colors.WHITE, null))).toBe(true); // вправо-вперед
-                expect(blackShatra.canMove(fromCell, new Cell(2, 2, 5, Colors.WHITE, null))).toBe(true); // влево
-                expect(blackShatra.canMove(fromCell, new Cell(2, 4, 5, Colors.WHITE, null))).toBe(true); // вправо
-            });
 
-            test('should return false for invalid moves - BLACK', () => {
-                const blackShatra = new Shatra('black-1', Colors.BLACK);
-                const fromCell = new Cell(1, 3, 5, Colors.BLACK, blackShatra);
 
-                // Invalid moves (назад)
-                expect(blackShatra.canMove(fromCell, new Cell(2, 3, 4, Colors.WHITE, null))).toBe(false); // назад
-                expect(blackShatra.canMove(fromCell, new Cell(2, 2, 4, Colors.WHITE, null))).toBe(false); // назад-влево
-                expect(blackShatra.canMove(fromCell, new Cell(2, 4, 4, Colors.WHITE, null))).toBe(false); // назад-вправо
+            fromCells.forEach(from => {
+                expect(from.figure).toBeInstanceOf(Shatra);
+                expect(from.figure!.color).toBe(Player.WHITE);
 
-                // Invalid moves (дальше чем на 1 клетку)
-                expect(blackShatra.canMove(fromCell, new Cell(2, 3, 7, Colors.WHITE, null))).toBe(false); // далеко вперед
-                expect(blackShatra.canMove(fromCell, new Cell(2, 1, 5, Colors.WHITE, null))).toBe(false); // далеко влево
-            });
+                const moves = board.getAvailableMoves(from!);
 
-            test('should return true for valid moves - WHITE', () => {
-                const whiteShatra = new Shatra('white-1', Colors.WHITE);
-                const fromCell = new Cell(1, 3, 5, Colors.WHITE, whiteShatra);
-
-                // Valid moves (вверх)
-                expect(whiteShatra.canMove(fromCell, new Cell(2, 3, 4, Colors.BLACK, null))).toBe(true); // вперед (вверх)
-                expect(whiteShatra.canMove(fromCell, new Cell(2, 2, 4, Colors.BLACK, null))).toBe(true); // влево-вперед
-                expect(whiteShatra.canMove(fromCell, new Cell(2, 4, 4, Colors.BLACK, null))).toBe(true); // вправо-вперед
-                expect(whiteShatra.canMove(fromCell, new Cell(2, 2, 5, Colors.BLACK, null))).toBe(true); // влево
-                expect(whiteShatra.canMove(fromCell, new Cell(2, 4, 5, Colors.BLACK, null))).toBe(true); // вправо
-            });
-
-            test('should return false for invalid moves - WHITE', () => {
-                const whiteShatra = new Shatra('white-1', Colors.WHITE);
-                const fromCell = new Cell(1, 3, 5, Colors.WHITE, whiteShatra);
-
-                // Invalid moves (назад - вниз)
-                expect(whiteShatra.canMove(fromCell, new Cell(2, 3, 6, Colors.BLACK, null))).toBe(false); // назад (вниз)
-                expect(whiteShatra.canMove(fromCell, new Cell(2, 2, 6, Colors.BLACK, null))).toBe(false); // назад-влево
-                expect(whiteShatra.canMove(fromCell, new Cell(2, 4, 6, Colors.BLACK, null))).toBe(false); // назад-вправо
-            });
-
-            test('should return false for same cell', () => {
-                const shatra = new Shatra('test', Colors.BLACK);
-                const fromCell = new Cell(1, 3, 5, Colors.BLACK, shatra);
-
-                expect(shatra.canMove(fromCell, fromCell)).toBe(false);
+                expect(moves).toEqual([]);
             });
         });
 
-        describe('constructor and properties', () => {
-            test('should create shatra with correct properties', () => {
-                const shatra = new Shatra('test-id', Colors.BLACK);
 
-                expect(shatra.id).toBe('test-id');
-                expect(shatra.color).toBe(Colors.BLACK);
-                expect(shatra.logo).toBe(Figures.Shatra);
+        test("Possible moves for Shatra in the middle fields", () => {
+            board.setFigure(35, new Shatra("test", Player.WHITE));
+
+            const from = board.getCellById(35);
+
+            const moves = board.getAvailableMoves(from!);
+
+            expect(moves).toContain(board.getCellById(34));
+            expect(moves).toContain(board.getCellById(36));
+            expect(moves).toContain(board.getCellById(27));
+            expect(moves).toContain(board.getCellById(28));
+            expect(moves).toContain(board.getCellById(29));
+        });
+
+        test("Possible moves for Shatra in the enemy fortress", () => {
+            board.setFigure(5, new Shatra("test", Player.WHITE));
+
+            const from = board.getCellById(5);
+            const moves = board.getAvailableMoves(from!);
+
+            const enemyColor = Player.BLACK;
+            const expectedMiddleZoneCells = board.getEmptyMiddleZoneCells(enemyColor);
+
+            expect(moves).toContain(board.getCellById(4));
+            expect(moves).toContain(board.getCellById(6));
+            expect(moves).toContain(board.getCellById(1));
+            expect(moves).toContain(board.getCellById(2));
+            expect(moves).toContain(board.getCellById(3));
+
+            expectedMiddleZoneCells.forEach(cell => {
+                expect(moves).toContain(cell);
             });
         });
-    })
-})
+
+
+        test("Posible moves for Shatra in the enemy biy position", () => {
+            board.setFigure(10, new Shatra("test", Player.WHITE));
+            board.setFigure(17, new Shatra("test1", Player.WHITE));
+            board.setFigure(14, new Shatra("test2", Player.BLACK));
+
+            const from = board.getCellById(10);
+            const moves = board.getAvailableMoves(from!);
+
+            const enemyColor = Player.BLACK;
+            const expectedMiddleZoneCells = board.getEmptyMiddleZoneCells(enemyColor);
+
+            expect(moves).toContain(board.getCellById(9));
+            expect(moves).toContain(board.getCellById(8));
+            expect(moves).toContain(board.getCellById(7));
+
+
+
+            expectedMiddleZoneCells.forEach(cell => {
+                expect(moves).toContain(cell);
+            });
+
+            const fromById17 = board.getCellById(17);
+            const movesById17 = board.getAvailableMoves(fromById17!);
+
+            expect(movesById17).toEqual([]);
+        });
+
+        test("Checking the Shatra moves", () => {
+            board.setFigure(35, new Shatra("test", Player.WHITE));
+
+            const from = board.getCellById(35);
+            const makeMove = board.makeMove(from!, board.getCellById(28)!);
+            expect(makeMove).toEqual(true);
+
+
+            expect(board.getCellById(28)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(28)?.figure?.color).toBe(Player.WHITE);
+            expect(board.getCellById(35)?.figure).toBe(null);
+
+            expect(board.makeMove(board.getCellById(28)!, board.getCellById(36)!)).toEqual(false);
+        });
+
+
+        test("Checking Shatra, who is eating into his own fortress", () => {
+            board.setFigure(44, new Shatra("test", Player.WHITE));
+            board.setFigure(50, new Shatra("test1", Player.BLACK));
+
+            const from = board.getCellById(44);
+            const makeMove = board.makeMove(from!, board.getCellById(53)!);
+
+            expect(makeMove).toBe(false);
+            expect(board.getCellById(53)?.figure).toBe(null);
+
+            expect(board.makeMove(from!, board.getCellById(36)!)).toBe(true);
+            expect(board.getCellById(36)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(36)?.figure?.color).toBe(Player.WHITE);
+            expect(from?.figure).toBe(null);
+        });
+
+
+        test("Checking Shatra, who is eating into to enemy fortress", () => {
+            board.setFigure(19, new Shatra("test", Player.WHITE));
+            board.setFigure(46, new Shatra("test1", Player.WHITE));
+            board.setFigure(13, new Shatra("test2", Player.BLACK));
+            board.setFigure(15, new Shatra("test3", Player.BLACK));
+
+            const from = board.getCellById(19);
+            const makeMove = board.makeMove(from!, board.getCellById(10)!);
+
+            expect(makeMove).toBe(true);
+            expect(board.getCellById(10)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(10)?.figure?.color).toBe(Player.WHITE);
+
+            expect(board.currentPlayer).toBe(Player.WHITE);
+
+
+            expect(board.makeMove(board.getCellById(10)!, board.getCellById(10)!)).toBe(true);
+            expect(board.getCellById(10)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(10)?.figure?.color).toBe(Player.WHITE);
+
+            expect(from?.figure).toBe(null);
+
+
+            expect(board.getCellById(13)?.figure).toBe(null);
+
+            expect(board.currentPlayer).toBe(Player.BLACK);
+
+            expect(board.makeMove(board.getCellById(15)!, board.getCellById(14)!)).toBe(true);
+            expect(board.getCellById(14)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(14)?.figure?.color).toBe(Player.BLACK);
+
+            expect(board.currentPlayer).toBe(Player.WHITE);
+
+            expect(board.isValidMove(board.getCellById(46)!, board.getCellById(39)!)).toBe(false);
+
+            expect(board.makeMove(board.getCellById(46)!, board.getCellById(39)!)).toBe(false);
+            expect(board.getCellById(39)?.figure).toBe(null);
+
+
+            expect(board.makeMove(board.getCellById(10)!, board.getCellById(9)!)).toBe(true);
+            expect(board.getCellById(9)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(9)?.figure?.color).toBe(Player.WHITE);
+
+
+
+        });
+
+
+    });
+
+
+
+
+    describe("Basic Movement for black shatra", () => {
+        let board: Board;
+
+        beforeEach(() => {
+            board = new Board();
+            board.initCells();
+            board.currentPlayer = Player.BLACK;
+        });
+
+
+        test("Shatra can move one cell from starting position", () => {
+            board.initFigures();
+            const from = board.getCell(1, 5)!;
+
+            expect(from.figure).toBeInstanceOf(Shatra);
+            expect(from.figure!.color).toBe(Player.BLACK);
+
+
+            const moves = board.getAvailableMoves(from!);
+
+            expect(moves).toContain(board.getCell(0, 6));
+            expect(moves).toContain(board.getCell(1, 6));
+            expect(moves).toContain(board.getCell(2, 6));
+
+        });
+
+        test("Shatra in reserve can move from starting position", () => {
+            board.initFigures();
+            const from = board.getCell(4, 2)!;
+
+            expect(from.figure).toBeInstanceOf(Shatra);
+            expect(from.figure!.color).toBe(Player.BLACK);
+
+            const moves = board.getAvailableMoves(from!);
+
+            expect(moves).toContain(board.getCell(0, 6));
+            expect(moves).toContain(board.getCell(1, 6));
+            expect(moves).toContain(board.getCell(2, 6));
+            expect(moves).toContain(board.getCell(3, 6));
+            expect(moves).toContain(board.getCell(4, 6));
+            expect(moves).toContain(board.getCell(5, 6));
+            expect(moves).toContain(board.getCell(6, 6));
+
+        });
+
+        test("Shatra that is in reserve cannot be moved unless it is its turn", () => {
+            board.initFigures();
+            const fromCells = [board.getCell(3, 2)!, board.getCell(2, 2)!, board.getCell(4, 1)!, board.getCell(3, 1)!, board.getCell(2, 1)!, board.getCell(4, 0)!, board.getCell(3, 0)!, board.getCell(2, 0)!];
+
+            fromCells.forEach(from => {
+                expect(from.figure).toBeInstanceOf(Shatra);
+                expect(from.figure!.color).toBe(Player.BLACK);
+
+                const moves = board.getAvailableMoves(from!);
+
+                expect(moves).toEqual([]);
+            });
+        });
+
+        test("Possible moves for Shatra in the middle fields", () => {
+            board.initFigures();
+            board.setFigure(28, new Shatra("test", Player.BLACK));
+
+            const from = board.getCellById(28);
+
+            const moves = board.getAvailableMoves(from!);
+
+            expect(moves).toContain(board.getCellById(27));
+            expect(moves).toContain(board.getCellById(29));
+            expect(moves).toContain(board.getCellById(34));
+            expect(moves).toContain(board.getCellById(35));
+            expect(moves).toContain(board.getCellById(36));
+        });
+
+
+        test("Possible moves for Shatra in the enemy fortress", () => {
+            board.setFigure(58, new Shatra("test", Player.BLACK));
+
+            const from = board.getCellById(58);
+            const moves = board.getAvailableMoves(from!);
+
+            const enemyColor = Player.WHITE;
+            const expectedMiddleZoneCells = board.getEmptyMiddleZoneCells(enemyColor);
+
+            expect(moves).toContain(board.getCellById(59));
+            expect(moves).toContain(board.getCellById(57));
+            expect(moves).toContain(board.getCellById(60));
+            expect(moves).toContain(board.getCellById(61));
+            expect(moves).toContain(board.getCellById(62));
+
+            expectedMiddleZoneCells.forEach(cell => {
+                expect(moves).toContain(cell);
+            });
+        });
+
+
+        test("Posible moves for Shatra in the enemy biy position", () => {
+            board.setFigure(53, new Shatra("test", Player.BLACK));
+            board.setFigure(46, new Shatra("test1", Player.BLACK));
+            board.setFigure(49, new Shatra("test2", Player.WHITE));
+
+            const from = board.getCellById(53);
+            const moves = board.getAvailableMoves(from!);
+
+            const enemyColor = Player.WHITE;
+            const expectedMiddleZoneCells = board.getEmptyMiddleZoneCells(enemyColor);
+
+            expect(moves).toContain(board.getCellById(54));
+            expect(moves).toContain(board.getCellById(55));
+            expect(moves).toContain(board.getCellById(56));
+
+
+
+            expectedMiddleZoneCells.forEach(cell => {
+                expect(moves).toContain(cell);
+            });
+
+            const fromById46 = board.getCellById(17);
+            const movesById46 = board.getAvailableMoves(fromById46!);
+
+            expect(movesById46).toEqual([]);
+
+
+        });
+
+
+        test("Checking the Shatra moves", () => {
+            board.setFigure(35, new Shatra("test", Player.BLACK));
+
+            const from = board.getCellById(35);
+            const makeMove = board.makeMove(from!, board.getCellById(42)!);
+            expect(makeMove).toEqual(true);
+
+
+            expect(board.getCellById(42)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(42)?.figure?.color).toBe(Player.BLACK);
+            expect(board.getCellById(35)?.figure).toBe(null);
+
+            expect(board.makeMove(board.getCellById(42)!, board.getCellById(36)!)).toEqual(false);
+        });
+
+        test("Checking Shatra, who is eating into his own fortress", () => {
+            board.setFigure(13, new Shatra("test", Player.BLACK));
+            board.setFigure(10, new Shatra("test1", Player.WHITE));
+
+            const from = board.getCellById(13);
+            const makeMove = board.makeMove(from!, board.getCellById(9)!);
+
+            expect(makeMove).toBe(false);
+            expect(board.getCellById(9)?.figure).toBe(null);
+
+            expect(board.makeMove(from!, board.getCellById(20)!)).toBe(true);
+            expect(board.getCellById(20)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(20)?.figure?.color).toBe(Player.BLACK);
+            expect(from?.figure).toBe(null);
+
+        });
+
+        test("Checking Shatra, who is eating into to enemy fortress", () => {
+            board.setFigure(44, new Shatra("test", Player.BLACK));
+            board.setFigure(11, new Shatra("test1", Player.BLACK));
+            board.setFigure(50, new Shatra("test2", Player.WHITE));
+            board.setFigure(48, new Shatra("test3", Player.WHITE));
+
+
+            const from = board.getCellById(44);
+            const makeMove = board.makeMove(from!, board.getCellById(53)!);
+
+            expect(makeMove).toBe(true);
+            expect(board.getCellById(53)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(53)?.figure?.color).toBe(Player.BLACK);
+
+            expect(board.currentPlayer).toBe(Player.BLACK);
+
+
+            expect(board.makeMove(board.getCellById(53)!, board.getCellById(53)!)).toBe(true);
+            expect(board.getCellById(53)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(53)?.figure?.color).toBe(Player.BLACK);
+
+            expect(from?.figure).toBe(null);
+
+
+            expect(board.getCellById(50)?.figure).toBe(null);
+
+            expect(board.currentPlayer).toBe(Player.WHITE);
+
+
+            expect(board.makeMove(board.getCellById(48)!, board.getCellById(49)!)).toBe(true);
+            expect(board.getCellById(49)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(49)?.figure?.color).toBe(Player.WHITE);
+
+            expect(board.currentPlayer).toBe(Player.BLACK);
+
+            expect(board.isValidMove(board.getCellById(11)!, board.getCellById(12)!)).toBe(false);
+
+            expect(board.makeMove(board.getCellById(11)!, board.getCellById(12)!)).toBe(false);
+            expect(board.getCellById(12)?.figure).toBe(null);
+
+
+            expect(board.makeMove(board.getCellById(53)!, board.getCellById(54)!)).toBe(true);
+            expect(board.getCellById(54)?.figure?.logo).toBe(Figures.Shatra);
+            expect(board.getCellById(54)?.figure?.color).toBe(Player.BLACK);
+        });
+    });
+});
