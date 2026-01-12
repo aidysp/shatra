@@ -931,86 +931,6 @@ export class Board {
     }
 
 
-    private hasBaatyrMoveIntersection(from: Cell, to: Cell): boolean {
-        if (!from.figure || !(from.figure instanceof Baatyr)) {
-            return false;
-        }
-
-        const isCaptureMove = this.isValidCaptureMove(from, to);
-        if (!isCaptureMove) {
-            return false;
-        }
-
-        if (from.isGate() && from.figure instanceof Baatyr) {
-            let hasEnemyFigureOnPath = false;
-            const dx = to.x - from.x;
-            const dy = to.y - from.y;
-            const dirX = dx === 0 ? 0 : dx > 0 ? 1 : -1;
-            const dirY = dy === 0 ? 0 : dy > 0 ? 1 : -1;
-
-            let distance = 1;
-            while (true) {
-                const checkX = from.x + dirX * distance;
-                const checkY = from.y + dirY * distance;
-                const checkCell = this.getCell(checkX, checkY);
-
-                if (!checkCell || checkCell === to) break;
-
-                if (checkCell.figure && checkCell.figure.color !== from.figure.color) {
-                    hasEnemyFigureOnPath = true;
-                    break;
-                }
-                distance++;
-            }
-
-
-            let extractionMoves: Cell[];
-            if (from.isOwnFortress(from.figure.color)) {
-
-                extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color);
-            } else if (from.isEnemyFortress()) {
-
-                const enemyColor = from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE;
-                extractionMoves = this.getEmptyMiddleZoneCells(enemyColor);
-            } else {
-                extractionMoves = [];
-            }
-
-            const isExtractionCell = extractionMoves.some(cell => cell.id === to.id);
-
-            return hasEnemyFigureOnPath && isExtractionCell;
-        }
-
-
-        return false;
-    }
-
-    public hasMoveIntersection(from: Cell, to: Cell): boolean {
-
-        if (this.gameState === GameState.ACTIVE_CAPTURE_CHAIN || this.gameState === GameState.BIY_RIGHTS_ACTIVE) {
-            return false;
-        }
-
-        const figuresWithCaptures = this.getFiguresWithCaptures();
-        if (figuresWithCaptures.length >= 2) {
-            return false;
-        }
-
-        if (!this.isValidMove(from, to)) {
-            return false;
-        }
-
-        if (from.figure instanceof Baatyr) {
-            return this.hasBaatyrMoveIntersection(from, to);
-        }
-
-
-        const isNormalMove = this.isValidNormalMove(from, to);
-        const isCaptureMove = this.isValidCaptureMove(from, to);
-
-        return isNormalMove && isCaptureMove;
-    }
-
     public makeNormalMove(from: Cell, to: Cell): boolean {
         if (!from.figure) {
             return false;
@@ -1045,6 +965,11 @@ export class Board {
             return false;
         }
 
+
+        if (!this.isValidMove(from, to)) {
+            return false;
+        }
+
         if (from === to && from.figure instanceof Biy && this.isBiyInOwnFortress(from)) {
             this.lastMoves[this.currentPlayer] = {
                 from: from,
@@ -1054,11 +979,6 @@ export class Board {
             this.switchPlayer();
             this.updateReserveOrderState();
             return true;
-        }
-
-        if (!this.isValidMove(from, to)) {
-            console.log("Hello")
-            return false;
         }
 
 
