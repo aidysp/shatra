@@ -145,7 +145,7 @@ describe("Shatra Figure tests", () => {
         });
 
 
-        test("Checking Shatra, who is eating into his own fortress", () => {
+        test("Checking Shatra, who is capturing into his own fortress", () => {
             board.setFigure(44, new Shatra("test", Player.WHITE));
             board.setFigure(50, new Shatra("test1", Player.BLACK));
 
@@ -162,7 +162,7 @@ describe("Shatra Figure tests", () => {
         });
 
 
-        test("Checking Shatra, who is eating into to enemy fortress", () => {
+        test("Checking Shatra, who is capturing into to enemy fortress", () => {
             board.setFigure(19, new Shatra("test", Player.WHITE));
             board.setFigure(46, new Shatra("test1", Player.WHITE));
             board.setFigure(13, new Shatra("test2", Player.BLACK));
@@ -204,9 +204,25 @@ describe("Shatra Figure tests", () => {
             expect(board.makeMove(board.getCellById(10)!, board.getCellById(9)!)).toBe(true);
             expect(board.getCellById(9)?.figure?.logo).toBe(Figures.Shatra);
             expect(board.getCellById(9)?.figure?.color).toBe(Player.WHITE);
+        });
+
+        test("When the Shatra figure has two capture options", () => {
+            board.setFigure(31, new Shatra("test", Player.WHITE));
+            board.setFigure(25, new Shatra("test1", Player.WHITE));
+            board.setFigure(46, new Shatra("test1", Player.WHITE));
+            board.setFigure(26, new Shatra("test2", Player.BLACK));
+            board.setFigure(30, new Shatra("test3", Player.BLACK));
+
+            expect(board.currentPlayer).toBe(Player.WHITE);
 
 
+            expect(board.hasShatraForcedCapture()).toBe(true);
+            expect(board.hasForcedCapture()).toBe(true);
 
+            expect(board.makeMove(board.getCellById(46)!, board.getCellById(47)!)).toBe(false);
+            expect(board.makeMove(board.getCellById(31)!, board.getCellById(24)!)).toBe(false);
+            expect(board.makeMove(board.getCellById(25)!, board.getCellById(18)!)).toBe(false);
+            expect(board.makeMove(board.getCellById(25)!, board.getCellById(27)!)).toBe(true);
         });
 
 
@@ -356,7 +372,7 @@ describe("Shatra Figure tests", () => {
             expect(board.makeMove(board.getCellById(42)!, board.getCellById(36)!)).toEqual(false);
         });
 
-        test("Checking Shatra, who is eating into his own fortress", () => {
+        test("Checking Shatra, who is capturing into his own fortress", () => {
             board.setFigure(13, new Shatra("test", Player.BLACK));
             board.setFigure(10, new Shatra("test1", Player.WHITE));
 
@@ -373,7 +389,7 @@ describe("Shatra Figure tests", () => {
 
         });
 
-        test("Checking Shatra, who is eating into to enemy fortress", () => {
+        test("Checking Shatra, who is capturing into to enemy fortress", () => {
             board.setFigure(44, new Shatra("test", Player.BLACK));
             board.setFigure(11, new Shatra("test1", Player.BLACK));
             board.setFigure(50, new Shatra("test2", Player.WHITE));
@@ -417,6 +433,30 @@ describe("Shatra Figure tests", () => {
             expect(board.makeMove(board.getCellById(53)!, board.getCellById(54)!)).toBe(true);
             expect(board.getCellById(54)?.figure?.logo).toBe(Figures.Shatra);
             expect(board.getCellById(54)?.figure?.color).toBe(Player.BLACK);
+        });
+
+
+        test("When the Shatra figure has two capture options", () => {
+            board.setFigure(31, new Shatra("test", Player.BLACK));
+            board.setFigure(25, new Shatra("test1", Player.BLACK));
+            board.setFigure(46, new Shatra("test3", Player.BLACK));
+            board.setFigure(26, new Shatra("test2", Player.WHITE));
+            board.setFigure(30, new Shatra("test3", Player.WHITE));
+
+
+
+            expect(board.currentPlayer).toBe(Player.BLACK);
+
+
+            expect(board.hasShatraForcedCapture()).toBe(true);
+            expect(board.hasForcedCapture()).toBe(true);
+
+            expect(board.makeMove(board.getCellById(46)!, board.getCellById(47)!)).toBe(false);
+            expect(board.makeMove(board.getCellById(31)!, board.getCellById(24)!)).toBe(false);
+            expect(board.makeMove(board.getCellById(25)!, board.getCellById(18)!)).toBe(false);
+            expect(board.makeMove(board.getCellById(25)!, board.getCellById(27)!)).toBe(true);
+
+
         });
     });
 });

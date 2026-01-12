@@ -965,6 +965,10 @@ export class Board {
             return false;
         }
 
+        if (!this.isValidMove(from, to)) {
+            return false;
+        }
+
 
         if (!this.isValidMove(from, to)) {
             return false;
@@ -979,6 +983,11 @@ export class Board {
             this.switchPlayer();
             this.updateReserveOrderState();
             return true;
+        }
+
+        if (!this.isValidMove(from, to)) {
+            console.log("Hello")
+            return false;
         }
 
 
