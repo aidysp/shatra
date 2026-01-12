@@ -65,7 +65,6 @@ const CellWidget: React.FC<CellWidgetProps> = ({
   isHovered,
   isSelected,
   isActiveCaptureFigure,
-  hasForcedCapture,
   onClick,
   isAnimating,
   targetX,
@@ -87,7 +86,6 @@ const CellWidget: React.FC<CellWidgetProps> = ({
       isHovered={isHovered}
       isSelected={isSelected}
       isActiveCaptureFigure={isActiveCaptureFigure}
-      hasForcedCapture={hasForcedCapture}
       onClick={onClick}
       onMouseMove={onMouseMove}
     >

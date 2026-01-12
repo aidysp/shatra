@@ -3,7 +3,7 @@
 import { Cell } from '@/shatra-core/src/Cell';
 import { Colors } from '@/shatra-core/src/config/Colors';
 import { KonvaEventObject } from 'konva/lib/Node';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Circle, Group, Rect, Text } from 'react-konva';
 
 interface FieldProps {
@@ -18,26 +18,16 @@ interface FieldProps {
   isHovered?: boolean;
   isSelected?: boolean;
   isActiveCaptureFigure?: Cell | null;
-  hasForcedCapture: boolean;
   onClick?: () => void;
   onMouseMove?: (e: KonvaEventObject<MouseEvent>) => void;
 }
 
-const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMove, isLastMove, isCaptureMove, hasForcedCapture, isHovered, isSelected, onClick, onMouseMove }) => {
+const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMove, isLastMove, isCaptureMove, isHovered, isSelected, onClick, onMouseMove }) => {
   const cellSize = 40;
 
-  const [pulse, setPulse] = useState(0);
 
-  useEffect(() => {
-    if (hasForcedCapture) {
-      const interval = setInterval(() => {
-        setPulse(prev => (prev + 1) % 60);
-      }, 50);
-      return () => clearInterval(interval);
-    }
-  }, [hasForcedCapture]);
 
-  const pulseScale = 1 + Math.sin(pulse * 0.1) * 0.1;
+
 
   return (
     <Group
@@ -58,26 +48,6 @@ const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMov
         fill={color}
       />
 
-      {hasForcedCapture && (
-        <Circle
-          x={cellSize / 2}
-          y={cellSize / 2}
-          radius={(cellSize / 2 - 2) * pulseScale}
-          fillRadialGradientStartPoint={{ x: 0, y: 0 }}
-          fillRadialGradientEndPoint={{ x: 0, y: 0 }}
-          fillRadialGradientStartRadius={0}
-          fillRadialGradientEndRadius={cellSize / 2}
-          fillRadialGradientColorStops={[
-            0, 'rgba(255, 0, 0, 0.7)',
-            0.5, 'rgba(255, 0, 0, 0.4)',
-            1, 'rgba(255, 0, 0, 0.0)'
-          ]}
-          shadowColor="red"
-          shadowBlur={15 + Math.sin(pulse * 0.1) * 3}
-          shadowOpacity={0.4 + Math.sin(pulse * 0.08) * 0.1}
-          listening={false}
-        />
-      )}
 
       {isLastMove && (
         <Rect

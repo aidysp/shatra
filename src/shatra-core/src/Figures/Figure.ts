@@ -18,4 +18,6 @@ export abstract class Figure {
 
     abstract getPossibleMoves(from: Cell, board: Board): { x: number, y: number }[];
     abstract getCaptureDirections(): { dx: number, dy: number }[];
+
+
 }

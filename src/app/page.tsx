@@ -236,28 +236,28 @@ export default function Home() {
   }
 
   const handleCellClick = (cell: Cell) => {
-    if ((shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
-      shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) &&
-      selectedCell && selectedCell.id === cell.id) {
+    // if ((shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+    //   shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) &&
+    //   selectedCell && selectedCell.id === cell.id) {
 
-      const tempBoard = shatraBoard.clone();
-      const tempFrom = tempBoard.getCellById(selectedCell.id)!;
+    //   const tempBoard = shatraBoard.clone();
+    //   const tempFrom = tempBoard.getCellById(selectedCell.id)!;
 
-      if (tempBoard.makeMove(tempFrom, tempFrom)) {
-        setShatraBoard(tempBoard);
-        setLastMove({
-          from: selectedCell,
-          to: selectedCell
-        });
-        playMoveSound();
-      }
+    //   if (tempBoard.makeMove(tempFrom, tempFrom)) {
+    //     setShatraBoard(tempBoard);
+    //     setLastMove({
+    //       from: selectedCell,
+    //       to: selectedCell
+    //     });
+    //     playMoveSound();
+    //   }
 
-      setSelectedCell(null);
-      setHoveredCell(null);
-      setAvailableMoves([]);
-      setCaptureMoves([]);
-      return;
-    }
+    //   setSelectedCell(null);
+    //   setHoveredCell(null);
+    //   setAvailableMoves([]);
+    //   setCaptureMoves([]);
+    //   return;
+    // }
 
 
 
@@ -295,15 +295,9 @@ export default function Home() {
       if (isAvailableMove) {
 
 
-        if (shatraBoard.hasMoveIntersection(selectedCell, cell)) {
-          setMoveChoice({
-            show: true,
-            from: selectedCell,
-            to: cell
-          });
-        } else {
-          performMoveWithAnimation(selectedCell, cell);
-        }
+
+        performMoveWithAnimation(selectedCell, cell);
+
         return;
       }
     }
@@ -458,21 +452,8 @@ export default function Home() {
       const toCell = nearestCell;
 
       if (fromCell) {
-        if (shatraBoard.hasMoveIntersection(fromCell, toCell)) {
-          setMoveChoice({
-            show: true,
-            from: fromCell,
-            to: toCell
-          });
 
-          e.target.position({
-            x: draggedPiece.originalX,
-            y: draggedPiece.originalY
-          });
-
-          return;
-        }
-        else if (availableMoves.includes(toCell.id) || captureMoves.includes(toCell.id)) {
+        if (availableMoves.includes(toCell.id) || captureMoves.includes(toCell.id)) {
           let moveSuccess = false;
           const tempBoard = shatraBoard.clone();
           const tempFrom = tempBoard.getCellById(fromCell.id)!;
@@ -655,7 +636,6 @@ export default function Home() {
           ></div>
 
           <div className="bg-white rounded-lg relative z-10">
-            {/* Кнопка закрытия */}
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold cursor-pointer"
               onClick={() => setMoveChoice({ show: false, from: null, to: null })}

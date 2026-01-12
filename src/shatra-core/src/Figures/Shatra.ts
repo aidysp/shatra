@@ -13,7 +13,7 @@ export class Shatra extends Figure {
         this.logo = Figures.Shatra;
     }
 
-    getPossibleMoves(from: Cell): { x: number, y: number }[] {
+    public getPossibleMoves(from: Cell): { x: number, y: number }[] {
         const direction = DirectionUtils.getPlayerDirection(this.color);
 
         return [
@@ -30,7 +30,7 @@ export class Shatra extends Figure {
         ];
     }
 
-    getCaptureDirections(): { dx: number, dy: number }[] {
+    public getCaptureDirections(): { dx: number, dy: number }[] {
         const forwardDirection = DirectionUtils.getPlayerDirection(this.color);
         const backwardDirection = -forwardDirection;
 
@@ -53,5 +53,15 @@ export class Shatra extends Figure {
             { dx: 2, dy: 0 }
         ]
     }
+
+
+    public ruleThroughMoves(to: Cell, from: Cell, lastMoveId: number): boolean {
+        if (to.id === lastMoveId && to.y === from.y) {
+            return false;
+        }
+
+        return true;
+    }
+
 
 }
