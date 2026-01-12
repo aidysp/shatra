@@ -295,15 +295,9 @@ export default function Home() {
       if (isAvailableMove) {
 
 
-        if (shatraBoard.hasMoveIntersection(selectedCell, cell)) {
-          setMoveChoice({
-            show: true,
-            from: selectedCell,
-            to: cell
-          });
-        } else {
-          performMoveWithAnimation(selectedCell, cell);
-        }
+
+        performMoveWithAnimation(selectedCell, cell);
+
         return;
       }
     }
@@ -458,21 +452,8 @@ export default function Home() {
       const toCell = nearestCell;
 
       if (fromCell) {
-        if (shatraBoard.hasMoveIntersection(fromCell, toCell)) {
-          setMoveChoice({
-            show: true,
-            from: fromCell,
-            to: toCell
-          });
 
-          e.target.position({
-            x: draggedPiece.originalX,
-            y: draggedPiece.originalY
-          });
-
-          return;
-        }
-        else if (availableMoves.includes(toCell.id) || captureMoves.includes(toCell.id)) {
+        if (availableMoves.includes(toCell.id) || captureMoves.includes(toCell.id)) {
           let moveSuccess = false;
           const tempBoard = shatraBoard.clone();
           const tempFrom = tempBoard.getCellById(fromCell.id)!;
