@@ -85,15 +85,6 @@ export default function Home() {
     setForcedCaptureFigures(forcedFigureIds);
   }, [shatraBoard]);
 
-  const [moveChoice, setMoveChoice] = useState<{
-    show: boolean;
-    from: Cell | null;
-    to: Cell | null;
-  }>({
-    show: false,
-    from: null,
-    to: null
-  });
 
   const [lastMove, setLastMove] = useState<{
     from: Cell | null;
@@ -236,28 +227,28 @@ export default function Home() {
   }
 
   const handleCellClick = (cell: Cell) => {
-    if ((shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
-      shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) &&
-      selectedCell && selectedCell.id === cell.id) {
+    // if ((shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+    //   shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) &&
+    //   selectedCell && selectedCell.id === cell.id) {
 
-      const tempBoard = shatraBoard.clone();
-      const tempFrom = tempBoard.getCellById(selectedCell.id)!;
+    //   const tempBoard = shatraBoard.clone();
+    //   const tempFrom = tempBoard.getCellById(selectedCell.id)!;
 
-      if (tempBoard.makeMove(tempFrom, tempFrom)) {
-        setShatraBoard(tempBoard);
-        setLastMove({
-          from: selectedCell,
-          to: selectedCell
-        });
-        playMoveSound();
-      }
+    //   if (tempBoard.makeMove(tempFrom, tempFrom)) {
+    //     setShatraBoard(tempBoard);
+    //     setLastMove({
+    //       from: selectedCell,
+    //       to: selectedCell
+    //     });
+    //     playMoveSound();
+    //   }
 
-      setSelectedCell(null);
-      setHoveredCell(null);
-      setAvailableMoves([]);
-      setCaptureMoves([]);
-      return;
-    }
+    //   setSelectedCell(null);
+    //   setHoveredCell(null);
+    //   setAvailableMoves([]);
+    //   setCaptureMoves([]);
+    //   return;
+    // }
 
 
 
@@ -293,17 +284,7 @@ export default function Home() {
       const isAvailableMove = availableMoves.includes(cell.id) || captureMoves.includes(cell.id);
 
       if (isAvailableMove) {
-
-
-        if (shatraBoard.hasMoveIntersection(selectedCell, cell)) {
-          setMoveChoice({
-            show: true,
-            from: selectedCell,
-            to: cell
-          });
-        } else {
-          performMoveWithAnimation(selectedCell, cell);
-        }
+        performMoveWithAnimation(selectedCell, cell);
         return;
       }
     }
@@ -458,21 +439,8 @@ export default function Home() {
       const toCell = nearestCell;
 
       if (fromCell) {
-        if (shatraBoard.hasMoveIntersection(fromCell, toCell)) {
-          setMoveChoice({
-            show: true,
-            from: fromCell,
-            to: toCell
-          });
 
-          e.target.position({
-            x: draggedPiece.originalX,
-            y: draggedPiece.originalY
-          });
-
-          return;
-        }
-        else if (availableMoves.includes(toCell.id) || captureMoves.includes(toCell.id)) {
+        if (availableMoves.includes(toCell.id) || captureMoves.includes(toCell.id)) {
           let moveSuccess = false;
           const tempBoard = shatraBoard.clone();
           const tempFrom = tempBoard.getCellById(fromCell.id)!;
@@ -541,53 +509,6 @@ export default function Home() {
   };
 
 
-  const handleNormalMove = () => {
-    if (moveChoice.from && moveChoice.to) {
-      const tempBoard = shatraBoard.clone();
-      const tempFrom = tempBoard.getCellById(moveChoice.from.id)!;
-      const tempTo = tempBoard.getCellById(moveChoice.to.id)!;
-
-      if (tempBoard.makeNormalMove(tempFrom, tempTo)) {
-        setShatraBoard(tempBoard);
-        setLastMove({
-          from: moveChoice.from,
-          to: moveChoice.to
-        });
-        playMoveSound();
-      }
-    }
-
-    setMoveChoice({ show: false, from: null, to: null });
-    setSelectedCell(null);
-    setHoveredCell(null);
-    setAvailableMoves([]);
-    setCaptureMoves([]);
-  };
-
-  const handleCaptureMove = () => {
-    if (moveChoice.from && moveChoice.to) {
-      const tempBoard = shatraBoard.clone();
-      const tempFrom = tempBoard.getCellById(moveChoice.from.id)!;
-      const tempTo = tempBoard.getCellById(moveChoice.to.id)!;
-
-      if (tempBoard.makeMove(tempFrom, tempTo)) {
-        setShatraBoard(tempBoard);
-        setLastMove({
-          from: moveChoice.from,
-          to: moveChoice.to
-        });
-        playMoveSound();
-      }
-    }
-
-    setMoveChoice({ show: false, from: null, to: null });
-    setSelectedCell(null);
-    setHoveredCell(null);
-    setAvailableMoves([]);
-    setCaptureMoves([]);
-  };
-
-
 
 
   return (
@@ -646,45 +567,6 @@ export default function Home() {
           </Stage>
         </div>
       </div>
-
-      {moveChoice.show && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div
-            className="absolute inset-0 bg-black opacity-80"
-            onClick={() => setMoveChoice({ show: false, from: null, to: null })}
-          ></div>
-
-          <div className="bg-white rounded-lg relative z-10">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold cursor-pointer"
-              onClick={() => setMoveChoice({ show: false, from: null, to: null })}
-            >
-              ×
-            </button>
-            <div className="bg-white p-6 rounded-lg">
-
-
-
-              <h3 className="text-black text-lg font-bold mb-4">Выберите тип хода</h3>
-              <div className="flex gap-4">
-
-                <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer"
-                  onClick={handleNormalMove}
-                >
-                  Обычный ход
-                </button>
-                <button
-                  className="bg-red-500 text-white px-4 py-2 rounded cursor-pointer"
-                  onClick={handleCaptureMove}
-                >
-                  Взять фигуру
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
