@@ -811,7 +811,7 @@ export class Board {
 
     public initCells() {
         let id = 1;
-
+        console.log(this)
         const boardStructure = [[2, 4], [2, 4], [2, 4], [3, 3], [0, 6], [0, 6], [0, 6], [0, 6], [0, 6], [0, 6], [3, 3], [2, 4], [2, 4], [2, 4]];
 
         boardStructure.forEach(([startX, endX], y) => {
