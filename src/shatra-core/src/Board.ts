@@ -14,6 +14,7 @@ export class Board {
     protected whiteFigures: Cell[] = [];
     protected blackFigures: Cell[] = [];
     public __currentPlayer: Player = Player.WHITE;
+    private __isFlipped: boolean = false;
     private __gameState: GameState = GameState.NORMAL;
     private activeWhiteBiyFigure: Cell | null = null;
     private activeBlackBiyFigure: Cell | null = null;
@@ -779,6 +780,10 @@ export class Board {
         return captureMoves;
     }
 
+    public get isFlipped(): boolean {
+        return this.__isFlipped;
+    }
+
     public get currentPlayer(): Player {
         return this.__currentPlayer;
     }
@@ -795,6 +800,32 @@ export class Board {
         return this.cells;
     }
 
+
+    public flip(): void {
+        this.__isFlipped = !this.__isFlipped;
+    }
+
+    public toDisplayCoords(x: number, y: number): { x: number, y: number } {
+        if (!this.__isFlipped) {
+            return { x, y }
+        }
+
+        return {
+            x: 6 - x,
+            y: 13 - y
+        }
+    }
+
+    public toLogicalCoords(displayX: number, displayY: number): { x: number, y: number } {
+        if (!this.__isFlipped) {
+            return { x: displayX, y: displayY };
+        }
+
+        return {
+            x: 6 - displayX,
+            y: 13 - displayY
+        }
+    }
 
 
     public switchPlayer(): void {
@@ -864,6 +895,7 @@ export class Board {
 
     public clone(): Board {
         const newBoard = new Board();
+
         newBoard.cells = this.cells.map(cell =>
             new Cell(cell.id, cell.x, cell.y, cell.color, cell.figure)
         );
@@ -917,6 +949,8 @@ export class Board {
                 figureId: this.lastMoves[Player.BLACK]!.figureId
             } : null
         };
+
+        newBoard.__isFlipped = this.__isFlipped;
 
 
         return newBoard;

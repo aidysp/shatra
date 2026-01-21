@@ -3,7 +3,7 @@ import "./globals.css";
 
 
 export const metadata: Metadata = {
-  title: "Altai Shatra",
+  title: "Shatra",
   description: "Altai(Telengit) Shatra game",
 };
 
