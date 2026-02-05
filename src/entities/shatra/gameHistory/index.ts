@@ -1,0 +1,1 @@
+export { ShatraGameHistory } from './model/ShatraGameHistory';
