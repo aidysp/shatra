@@ -3,24 +3,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stage, Layer } from "react-konva";
 import { Layer as KonvaLayer } from 'konva/lib/Layer';
-import { Board } from "@/shatra-core/src";
+import { ShatraBoard as Board, ShatraCell as Cell } from '@/entities';
 import { KonvaEventObject } from 'konva/lib/Node';
-import { Figure } from '@/shatra-core/src/Figures/Figure';
-import { Cell } from '@/shatra-core/src/Cell';
+import { Figure } from '@/entities/shatra/figure';
 import { flushSync } from 'react-dom';
-import { BoardVisualizer } from '@/shatra-core/src/utils/BoardVisualizer';
-import { Player } from '@/shatra-core/src/config/Player';
-import { GameState } from '@/shatra-core/src/config/GameState';
-import { Biy } from '@/shatra-core/src/Figures/Biy';
-import { CellWidget } from '@/widgets/cellWidget';
-
+import { BoardVisualizer } from '@/entities/shatra/utils/BoardVisualizer';
+import { Player } from '@/entities/shatra/config/Player';
+import { GameState } from '@/entities/shatra/config/GameState';
+import { Biy } from '@/entities/shatra/figure/model/Biy';
+import { BoardCell } from '@/shared/ui/board';
+import { ShatraGameHistory as GameHistory } from '@/entities';
+import { MoveHistoryWidget } from '@/widgets/moveHistoryWidget';
 
 
 const BoardWidget: React.FC = () => {
 
+    const [gameHistory, setGameHistory] = useState<GameHistory | null>(null);
+    const moves = gameHistory?.getAllMoves() || [];
+
     const [shatraBoard, setShatraBoard] = useState<Board>(new Board());
     const [activeCaptureFigure, setActiveCaptureFigure] = useState<Cell | null>(null);
     const [isFlipped, setisFlipped] = useState(false);
+
 
 
     const handleFlipBoard = () => {
@@ -148,8 +152,12 @@ const BoardWidget: React.FC = () => {
         const board = new Board();
         board.initCells();
         board.initFigures();
-        BoardVisualizer.printBoard(board, Player.BLACK);
+
+        const history = new GameHistory(board);
+        setGameHistory(history);
         setShatraBoard(board);
+
+        BoardVisualizer.printBoard(board, Player.BLACK);
     }, []);
 
     interface DraggedPiece {
@@ -210,6 +218,8 @@ const BoardWidget: React.FC = () => {
             toCell: to
         };
 
+        gameHistory!.addMove(animatingFigure.fromCell, animatingFigure.toCell);
+
         setAnimatingFigure(animatingFigure);
         setAvailableMoves([]);
         setCaptureMoves([]);
@@ -225,12 +235,19 @@ const BoardWidget: React.FC = () => {
 
         flushSync(() => {
             shatraBoard.makeMove(animatingFigure.fromCell, animatingFigure.toCell);
+
             setShatraBoard(shatraBoard.clone());
+
             setLastMove({
                 from: animatingFigure.fromCell,
                 to: animatingFigure.toCell
             });
             setAnimatingFigure(null);
+
+
+            const newBoard = shatraBoard.clone();
+
+            setShatraBoard(newBoard);
         });
 
         playMoveSound();
@@ -514,20 +531,11 @@ const BoardWidget: React.FC = () => {
 
     return (
         <>
+
+
+            <MoveHistoryWidget moves={moves} />
             <button
                 onClick={handleFlipBoard}
-                style={{
-                    position: 'absolute',
-                    top: '10px',
-                    left: '10px',
-                    zIndex: 1000,
-                    padding: '10px',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer'
-                }}
             >
                 {isFlipped ? '◉ Вид за белых' : '◉ Вид за чёрных'}
             </button>
@@ -560,7 +568,7 @@ const BoardWidget: React.FC = () => {
 
 
 
-                            return <CellWidget
+                            return <BoardCell
                                 key={cell.id}
                                 id={cell.id}
                                 x={displayCoords.x}
@@ -590,6 +598,9 @@ const BoardWidget: React.FC = () => {
 
                 <Layer ref={tempLayerRef} id="temp-layer" />
             </Stage>
+
+
+
         </>
     );
 }
