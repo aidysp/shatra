@@ -1,7 +1,7 @@
 import { Field } from "@/shared/ui/board/field/field";
 import { FigureLogo } from '@/shared/ui/board/figure/figure';
 
-import { Cell } from "@/entities/shatra/cell/model/ShatraCell";
+import { ShatraCell as Cell } from "@/entities/shatra/cell/model/ShatraCell";
 import { Colors } from "@/entities/shatra/config/Colors";
 import { Figures } from "@/entities/shatra/config/Figures";
 import { Player } from "@/entities/shatra/config/Player";

@@ -479,6 +479,7 @@ export class ShatraBoard {
         return false;
     }
 
+
     public isValidCaptureMove(from: Cell, to: Cell): boolean {
 
 

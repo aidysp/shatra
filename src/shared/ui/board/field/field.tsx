@@ -1,6 +1,6 @@
 'use client'
 
-import { Cell } from '@/entities/shatra/cell/model/ShatraCell';
+import { ShatraCell as Cell } from '@/entities/shatra/cell/model/ShatraCell';
 import { Colors } from '@/entities/shatra/config/Colors';
 import { KonvaEventObject } from 'konva/lib/Node';
 import React from 'react';

@@ -7,61 +7,46 @@ import { ShatraBoard as Board, ShatraCell as Cell } from '@/entities';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { Figure } from '@/entities/shatra/figure';
 import { flushSync } from 'react-dom';
-import { BoardVisualizer } from '@/entities/shatra/utils/BoardVisualizer';
-import { Player } from '@/entities/shatra/config/Player';
 import { GameState } from '@/entities/shatra/config/GameState';
 import { Biy } from '@/entities/shatra/figure/model/Biy';
 import { BoardCell } from '@/shared/ui/board';
 import { ShatraGameHistory as GameHistory } from '@/entities';
 import { MoveHistoryWidget } from '@/widgets/moveHistoryWidget';
+import { FlipBoardButton } from '@/features/flipBoard';
+import { MoveInfo } from '@/entities/shatra/gameHistory/model/ShatraGameHistory';
+import { useFlipBoard } from '@/features/flipBoard/context/flipBoard.Context';
+
+interface BoardWidgetProps {
+    shatraBoard: Board;
+    setShatraBoard: (shatraBoard: Board) => void;
+    gameHistory: GameHistory | null;
+    setGameHistory: (GameHistory: GameHistory) => void;
+    moves: MoveInfo[] | [];
+    activeCaptureFigure: Cell | null;
+    setActiveCaptureFigure: (Cell: Cell | null) => void;
+}
+
+interface AvailableMove {
+    cellId: number;
+    x: number;
+    y: number;
+
+    isCapture: boolean;
+}
 
 
-const BoardWidget: React.FC = () => {
-
-    const [gameHistory, setGameHistory] = useState<GameHistory | null>(null);
-    const moves = gameHistory?.getAllMoves() || [];
-
-    const [shatraBoard, setShatraBoard] = useState<Board>(new Board());
-    const [activeCaptureFigure, setActiveCaptureFigure] = useState<Cell | null>(null);
-    const [isFlipped, setisFlipped] = useState(false);
-
-
-
-    const handleFlipBoard = () => {
-        const newBoard = shatraBoard.clone();
-        newBoard.flip();
-        setShatraBoard(newBoard);
-        setisFlipped(!isFlipped);
-    }
+const BoardWidget: React.FC<BoardWidgetProps> = ({
+    shatraBoard,
+    setShatraBoard,
+    gameHistory,
+    setGameHistory,
+    moves,
+    activeCaptureFigure,
+    setActiveCaptureFigure
+}) => {
 
 
-    useEffect(() => {
-        if (shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
-            shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
-            const activeFigure = shatraBoard.getActiveCaptureFigure();
-            setActiveCaptureFigure(activeFigure);
 
-            if (activeFigure) {
-                const moves = shatraBoard.getAvailableMoves(activeFigure);
-                const normalMoves: number[] = [];
-                const captureMovesList: number[] = [];
-
-                moves.forEach(moveCell => {
-                    if (shatraBoard.isValidCaptureMove(activeFigure, moveCell)) {
-                        captureMovesList.push(moveCell.id);
-                    } else {
-                        normalMoves.push(moveCell.id);
-                    }
-                });
-
-                setAvailableMoves(normalMoves);
-                setCaptureMoves(captureMovesList);
-                setSelectedCell(activeFigure);
-            }
-        } else {
-            setActiveCaptureFigure(null);
-        }
-    }, [shatraBoard]);
 
 
     const [forcedCaptureFigures, setForcedCaptureFigures] = useState<number[]>([]);
@@ -73,16 +58,25 @@ const BoardWidget: React.FC = () => {
 
             if (activeFigure) {
                 const moves = shatraBoard.getAvailableMoves(activeFigure);
-                const normalMoves: number[] = [];
-                const captureMovesList: number[] = [];
+                const normalMoves: AvailableMove[] = [];
+                const captureMovesList: AvailableMove[] = [];
 
                 moves.forEach(moveCell => {
-                    if (shatraBoard.isValidCaptureMove(activeFigure, moveCell)) {
-                        captureMovesList.push(moveCell.id);
+                    const moveInfo: AvailableMove = {
+                        cellId: moveCell.id,
+                        x: moveCell.x,
+                        y: moveCell.y,
+
+                        isCapture: shatraBoard.isValidCaptureMove(activeFigure, moveCell)
+                    };
+
+                    if (moveInfo.isCapture) {
+                        captureMovesList.push(moveInfo);
                     } else {
-                        normalMoves.push(moveCell.id);
+                        normalMoves.push(moveInfo);
                     }
                 });
+
 
                 setAvailableMoves(normalMoves);
                 setCaptureMoves(captureMovesList);
@@ -148,18 +142,6 @@ const BoardWidget: React.FC = () => {
     }, []);
 
 
-    useEffect(() => {
-        const board = new Board();
-        board.initCells();
-        board.initFigures();
-
-        const history = new GameHistory(board);
-        setGameHistory(history);
-        setShatraBoard(board);
-
-        BoardVisualizer.printBoard(board, Player.BLACK);
-    }, []);
-
     interface DraggedPiece {
         cellId: number;
         figure: Figure | null | undefined;
@@ -169,9 +151,11 @@ const BoardWidget: React.FC = () => {
 
 
     const [draggedPiece, setDraggedPiece] = useState<DraggedPiece | null>(null);
-    const [availableMoves, setAvailableMoves] = useState<number[]>([]);
-    const [captureMoves, setCaptureMoves] = useState<number[]>([]);
-    const [hoveredCell, setHoveredCell] = useState<number | null>(null);
+    const [availableMoves, setAvailableMoves] = useState<AvailableMove[]>([]);
+    const [captureMoves, setCaptureMoves] = useState<AvailableMove[]>([]);
+    const [hoveredCell, setHoveredCell] = useState<{ x: number, y: number } | null>(null);
+
+
     const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
 
     const [animatingFigure, setAnimatingFigure] = useState<{
@@ -179,6 +163,46 @@ const BoardWidget: React.FC = () => {
         fromCell: Cell;
         toCell: Cell;
     } | null>(null);
+
+
+
+    useEffect(() => {
+        if (shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+            shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+            const activeFigure = shatraBoard.getActiveCaptureFigure();
+            setActiveCaptureFigure(activeFigure);
+
+            if (activeFigure) {
+                const moves = shatraBoard.getAvailableMoves(activeFigure);
+                const normalMoves: AvailableMove[] = [];
+                const captureMovesList: AvailableMove[] = [];
+
+                moves.forEach(moveCell => {
+                    const displayCoords = shatraBoard.toDisplayCoords(moveCell.x, moveCell.y);
+                    const moveInfo: AvailableMove = {
+                        cellId: moveCell.id,
+                        x: moveCell.x,
+                        y: moveCell.y,
+
+                        isCapture: shatraBoard.isValidCaptureMove(activeFigure, moveCell)
+                    };
+
+                    if (moveInfo.isCapture) {
+                        captureMovesList.push(moveInfo);
+                    } else {
+                        normalMoves.push(moveInfo);
+                    }
+                });
+
+                setAvailableMoves(normalMoves);
+                setCaptureMoves(captureMovesList);
+                setSelectedCell(activeFigure);
+            }
+        } else {
+            setActiveCaptureFigure(null);
+        }
+    }, [shatraBoard]);
+
 
 
 
@@ -270,13 +294,21 @@ const BoardWidget: React.FC = () => {
             setSelectedCell(cell);
 
             const moves = shatraBoard.getAvailableMoves(cell);
-            const normalMoves: number[] = [];
-            const captureMovesList: number[] = [];
+            const normalMoves: AvailableMove[] = [];
+            const captureMovesList: AvailableMove[] = [];
 
             moves.forEach(moveCell => {
-                normalMoves.push(moveCell.id);
-                if (shatraBoard.isValidCaptureMove(cell, moveCell)) {
-                    captureMovesList.push(moveCell.id);
+
+                const moveInfo: AvailableMove = {
+                    cellId: moveCell.id,
+                    x: moveCell.x,
+                    y: moveCell.y,
+                    isCapture: shatraBoard.isValidCaptureMove(cell, moveCell)
+                };
+
+                normalMoves.push(moveInfo);
+                if (moveInfo.isCapture) {
+                    captureMovesList.push(moveInfo);
                 }
             });
             setAvailableMoves(normalMoves);
@@ -285,14 +317,12 @@ const BoardWidget: React.FC = () => {
         }
 
         if (selectedCell) {
-            const isAvailableMove = availableMoves.includes(cell.id) || captureMoves.includes(cell.id);
+            const isAvailableMove = availableMoves.some(move =>
+                move.x === cell.x && move.y === cell.y
+            );
 
             if (isAvailableMove) {
-
-
-
                 performMoveWithAnimation(selectedCell, cell);
-
                 return;
             }
         }
@@ -315,8 +345,20 @@ const BoardWidget: React.FC = () => {
 
         const nearestCell = findNearestCell(pos.x, pos.y);
 
-        if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
-            setHoveredCell(nearestCell.id);
+        if (nearestCell) {
+
+            const isAvailable = availableMoves.some(move =>
+                move.x === nearestCell.x && move.y === nearestCell.y
+            );
+            const isCapture = captureMoves.some(move =>
+                move.x === nearestCell.x && move.y === nearestCell.y
+            );
+
+            if (isAvailable || isCapture) {
+                setHoveredCell({ x: nearestCell.x, y: nearestCell.y });
+            } else {
+                setHoveredCell(null);
+            }
         } else {
             setHoveredCell(null);
         }
@@ -345,14 +387,21 @@ const BoardWidget: React.FC = () => {
             const fromCell = shatraBoard.getCellById(cellId);
             if (fromCell && fromCell.figure) {
                 const moves = shatraBoard.getAvailableMoves(fromCell);
-                const normalMoves: number[] = [];
-                const captureMovesList: number[] = [];
+                const normalMoves: AvailableMove[] = [];
+                const captureMovesList: AvailableMove[] = [];
 
                 moves.forEach(moveCell => {
-                    if (shatraBoard.isValidCaptureMove(fromCell, moveCell)) {
-                        captureMovesList.push(moveCell.id);
+                    const moveInfo: AvailableMove = {
+                        cellId: moveCell.id,
+                        x: moveCell.x,
+                        y: moveCell.y,
+                        isCapture: shatraBoard.isValidCaptureMove(fromCell, moveCell)
+                    };
+
+                    if (moveInfo.isCapture) {
+                        captureMovesList.push(moveInfo);
                     } else {
-                        normalMoves.push(moveCell.id);
+                        normalMoves.push(moveInfo);
                     }
                 });
 
@@ -374,10 +423,20 @@ const BoardWidget: React.FC = () => {
         const nearestCell = findNearestCell(pos.x, pos.y);
 
 
-        if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
-            setHoveredCell(nearestCell.id);
-        } else {
-            setHoveredCell(null);
+        if (nearestCell) {
+            const isAvailable = availableMoves.some(move =>
+                move.x === nearestCell.x && move.y === nearestCell.y
+            );
+            const isCapture = captureMoves.some(move =>
+                move.x === nearestCell.x && move.y === nearestCell.y
+            );
+
+
+            if (isAvailable || isCapture) {
+                setHoveredCell({ x: nearestCell.x, y: nearestCell.y });
+            } else {
+                setHoveredCell(null);
+            }
         }
     }
 
@@ -443,45 +502,59 @@ const BoardWidget: React.FC = () => {
                 });
             }
         }
-        else if (nearestCell && (availableMoves.includes(nearestCell.id) || captureMoves.includes(nearestCell.id))) {
+        else if (nearestCell) {
+            const isAvailableMove = availableMoves.some(move =>
+                move.x === nearestCell.x && move.y === nearestCell.y
+            );
+            const isCaptureMove = captureMoves.some(move =>
+                move.x === nearestCell.x && move.y === nearestCell.y
+            );
 
-            const toCell = nearestCell;
+            if (isAvailableMove || isCaptureMove) {
+                const toCell = nearestCell;
+                if (fromCell) {
+                    const isAvailable = availableMoves.some(move =>
+                        move.x === toCell.x && move.y === toCell.y
+                    );
+                    const isCapture = captureMoves.some(move =>
+                        move.x === toCell.x && move.y === toCell.y
+                    );
 
-            if (fromCell) {
+                    if (isAvailable || isCapture) {
+                        let moveSuccess = false;
+                        const tempBoard = shatraBoard.clone();
+                        const tempFrom = tempBoard.getCellById(fromCell.id)!;
+                        const tempTo = tempBoard.getCellById(toCell.id)!;
 
-                if (availableMoves.includes(toCell.id) || captureMoves.includes(toCell.id)) {
-                    let moveSuccess = false;
-                    const tempBoard = shatraBoard.clone();
-                    const tempFrom = tempBoard.getCellById(fromCell.id)!;
-                    const tempTo = tempBoard.getCellById(toCell.id)!;
+                        if (isAvailable) { // Изменяем эту строку
+                            moveSuccess = tempBoard.makeNormalMove(tempFrom, tempTo);
+                        } else {
+                            moveSuccess = tempBoard.makeMove(tempFrom, tempTo);
+                        }
 
-                    if (availableMoves.includes(toCell.id)) {
-                        moveSuccess = tempBoard.makeNormalMove(tempFrom, tempTo);
-                    } else {
-                        moveSuccess = tempBoard.makeMove(tempFrom, tempTo);
-                    }
+                        if (moveSuccess) {
+                            setShatraBoard(tempBoard);
+                            const finalDisplayCoords = shatraBoard.toDisplayCoords(toCell.x, toCell.y);
 
-                    if (moveSuccess) {
-                        setShatraBoard(tempBoard);
-                        const toDisplayCoords = shatraBoard.toDisplayCoords(toCell.x, toCell.y);
-
-                        e.target.position({
-                            x: toDisplayCoords.x * 40 + 5,
-                            y: toDisplayCoords.y * 40 + 5
-                        });
-                        setLastMove({
-                            from: fromCell,
-                            to: toCell
-                        });
-                        playMoveSound();
-                    } else {
-                        e.target.position({
-                            x: draggedPiece.originalX,
-                            y: draggedPiece.originalY
-                        });
+                            e.target.position({
+                                x: finalDisplayCoords.x * 40 + 5,
+                                y: finalDisplayCoords.y * 40 + 5
+                            });
+                            setLastMove({
+                                from: fromCell,
+                                to: toCell
+                            });
+                            playMoveSound();
+                        } else {
+                            e.target.position({
+                                x: draggedPiece.originalX,
+                                y: draggedPiece.originalY
+                            });
+                        }
                     }
                 }
             }
+
         }
 
 
@@ -525,7 +598,7 @@ const BoardWidget: React.FC = () => {
     };
 
 
-
+    const { flipKey } = useFlipBoard();
 
 
 
@@ -533,14 +606,27 @@ const BoardWidget: React.FC = () => {
         <>
 
 
+
             <MoveHistoryWidget moves={moves} />
-            <button
-                onClick={handleFlipBoard}
-            >
-                {isFlipped ? '◉ Вид за белых' : '◉ Вид за чёрных'}
-            </button>
+            <FlipBoardButton
+                board={shatraBoard}
+                onFlip={(flippedBoard) => {
+                    flushSync(() => {
+                        setSelectedCell(null);
+                        setAvailableMoves([]);
+                        setCaptureMoves([]);
+                        setHoveredCell(null);
+                        setDraggedPiece(null);
+                        setAnimatingFigure(null);
+                    });
+
+                    setShatraBoard(flippedBoard);
+                }}
+            />
+
+
             <Stage
-                key={`${windowSize.width}-${windowSize.height}-${isFlipped}`}
+                key={`${flipKey}`}
                 width={280}
                 height={560}
                 onClick={handleStageClick}
@@ -569,7 +655,8 @@ const BoardWidget: React.FC = () => {
 
 
                             return <BoardCell
-                                key={cell.id}
+                                key={`${cell.id}`}
+
                                 id={cell.id}
                                 x={displayCoords.x}
                                 y={displayCoords.y}
@@ -580,10 +667,16 @@ const BoardWidget: React.FC = () => {
                                 handleDragEnd={handleDragEnd}
                                 handleDragMove={handleDragMove}
                                 onMouseMove={handleMouseMove}
-                                isAvailableMove={availableMoves.includes(cell.id)}
+                                isAvailableMove={availableMoves.some(move =>
+                                    move.x === cell.x && move.y === cell.y
+                                )}
                                 isLastMove={lastMove.from?.id === cell.id || lastMove.to?.id === cell.id}
-                                isCaptureMove={captureMoves.includes(cell.id)}
-                                isHovered={hoveredCell === cell.id}
+                                isCaptureMove={captureMoves.some(move =>
+                                    move.x === cell.x && move.y === cell.y
+                                )}
+                                isHovered={hoveredCell !== null &&
+                                    hoveredCell.x === cell.x &&
+                                    hoveredCell.y === cell.y}
                                 isSelected={selectedCell?.id === cell.id}
                                 isActiveCaptureFigure={activeCaptureFigure}
                                 hasForcedCapture={hasForcedCapture}
@@ -597,13 +690,12 @@ const BoardWidget: React.FC = () => {
 
 
                 <Layer ref={tempLayerRef} id="temp-layer" />
-            </Stage>
+            </Stage >
 
 
 
         </>
     );
 }
-
 
 export { BoardWidget }

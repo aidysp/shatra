@@ -1,4 +1,4 @@
-import { MoveInfo } from "@/shatra-core/src/GameHistory"
+import { MoveInfo } from "@/entities/shatra/gameHistory/model/ShatraGameHistory";
 
 interface moveHistoryProps {
     moves: MoveInfo[];
