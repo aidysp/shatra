@@ -50,6 +50,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
 
     const [forcedCaptureFigures, setForcedCaptureFigures] = useState<number[]>([]);
+
     useEffect(() => {
         if (shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
             shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
@@ -89,8 +90,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         const forcedFigures = shatraBoard.getFiguresWithForcedCapture();
         const forcedFigureIds = forcedFigures.map(cell => cell.id);
         setForcedCaptureFigures(forcedFigureIds);
-    }, [shatraBoard]);
-
+    }, [shatraBoard, setActiveCaptureFigure]);
 
 
     const [lastMove, setLastMove] = useState<{
@@ -118,7 +118,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         if (moveSoundRef.current) {
             moveSoundRef.current.currentTime = 0;
             moveSoundRef.current.play().catch(error => {
-                console.log('Autoplay sound is blocked:', error);
+                console.warn("Error playMoveSound", error)
             });
         }
     };
@@ -163,45 +163,6 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         fromCell: Cell;
         toCell: Cell;
     } | null>(null);
-
-
-
-    useEffect(() => {
-        if (shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
-            shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
-            const activeFigure = shatraBoard.getActiveCaptureFigure();
-            setActiveCaptureFigure(activeFigure);
-
-            if (activeFigure) {
-                const moves = shatraBoard.getAvailableMoves(activeFigure);
-                const normalMoves: AvailableMove[] = [];
-                const captureMovesList: AvailableMove[] = [];
-
-                moves.forEach(moveCell => {
-                    const displayCoords = shatraBoard.toDisplayCoords(moveCell.x, moveCell.y);
-                    const moveInfo: AvailableMove = {
-                        cellId: moveCell.id,
-                        x: moveCell.x,
-                        y: moveCell.y,
-
-                        isCapture: shatraBoard.isValidCaptureMove(activeFigure, moveCell)
-                    };
-
-                    if (moveInfo.isCapture) {
-                        captureMovesList.push(moveInfo);
-                    } else {
-                        normalMoves.push(moveInfo);
-                    }
-                });
-
-                setAvailableMoves(normalMoves);
-                setCaptureMoves(captureMovesList);
-                setSelectedCell(activeFigure);
-            }
-        } else {
-            setActiveCaptureFigure(null);
-        }
-    }, [shatraBoard]);
 
 
 
@@ -279,6 +240,18 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
     }
 
     const handleCellClick = (cell: Cell) => {
+
+        if (activeCaptureFigure) {
+            const isAvailableForActiveFigure = captureMoves.some(move =>
+                move.x === cell.x && move.y === cell.y
+            );
+
+            if (isAvailableForActiveFigure) {
+                performMoveWithAnimation(activeCaptureFigure, cell);
+                return;
+            }
+
+        }
 
         if (selectedCell?.id === cell.id) {
             setSelectedCell(null);
@@ -482,12 +455,14 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                 const tempBoard = shatraBoard.clone();
                 const tempFrom = tempBoard.getCellById(fromCell.id)!;
 
+                // !!!
                 if (tempBoard.makeMove(tempFrom, tempFrom)) {
                     setShatraBoard(tempBoard);
                     setLastMove({
                         from: fromCell,
                         to: fromCell
                     });
+
                     playMoveSound();
                 } else {
                     e.target.position({
@@ -526,7 +501,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                         const tempFrom = tempBoard.getCellById(fromCell.id)!;
                         const tempTo = tempBoard.getCellById(toCell.id)!;
 
-                        if (isAvailable) { // Изменяем эту строку
+                        if (isAvailable) {
                             moveSuccess = tempBoard.makeNormalMove(tempFrom, tempTo);
                         } else {
                             moveSuccess = tempBoard.makeMove(tempFrom, tempTo);
