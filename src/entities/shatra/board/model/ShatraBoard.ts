@@ -838,7 +838,6 @@ export class ShatraBoard {
 
     public initCells() {
         let id = 1;
-        console.log(this)
         const boardStructure = [[2, 4], [2, 4], [2, 4], [3, 3], [0, 6], [0, 6], [0, 6], [0, 6], [0, 6], [0, 6], [3, 3], [2, 4], [2, 4], [2, 4]];
 
         boardStructure.forEach(([startX, endX], y) => {
@@ -1016,7 +1015,6 @@ export class ShatraBoard {
         }
 
         if (!this.isValidMove(from, to)) {
-            console.log("Hello")
             return false;
         }
 

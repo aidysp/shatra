@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stage, Layer } from "react-konva";
 import { Layer as KonvaLayer } from 'konva/lib/Layer';
-import { ShatraBoard as Board, ShatraCell as Cell } from '@/entities';
+import { ShatraBoard as Board, ShatraCell as Cell, ShatraBoard } from '@/entities';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { Figure } from '@/entities/shatra/figure';
 import { flushSync } from 'react-dom';
@@ -15,6 +15,7 @@ import { MoveHistoryWidget } from '@/widgets/moveHistoryWidget';
 import { FlipBoardButton } from '@/features/flipBoard';
 import { MoveInfo } from '@/entities/shatra/gameHistory/model/ShatraGameHistory';
 import { useFlipBoard } from '@/features/flipBoard/context/flipBoard.Context';
+import { findNearestCellId } from '@/shared/lib/board';
 
 interface BoardWidgetProps {
     shatraBoard: Board;
@@ -165,29 +166,15 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
     } | null>(null);
 
 
-
-
-    const findNearestCell = (displayX: number, displayY: number): Cell | null => {
-        let nearestCell: Cell | null = null;
-        let minDistance = Infinity;
-        const MAGNET_THRESHOLD = 30;
-
-        shatraBoard.getCells.forEach(cell => {
-            const displayCoords = shatraBoard.toDisplayCoords(cell.x, cell.y);
-
-            const cellCenterX = displayCoords.x * 40 + 20;
-            const cellCenterY = displayCoords.y * 40 + 20;
-
-            const distance = Math.sqrt(Math.pow(displayX - cellCenterX, 2) + Math.pow(displayY - cellCenterY, 2));
-
-            if (distance < minDistance && distance < MAGNET_THRESHOLD) {
-                minDistance = distance;
-                nearestCell = cell;
-            }
-        });
-
-        return nearestCell;
-    }
+    const getCellsWithDisplay = () => {
+        return shatraBoard.getCells.map((cell: Cell) => ({
+            id: cell.id,
+            x: cell.x,
+            y: cell.y,
+            displayX: shatraBoard.toDisplayCoords(cell.x, cell.y).x,
+            displayY: shatraBoard.toDisplayCoords(cell.x, cell.y).y
+        }));
+    };
 
 
 
@@ -316,7 +303,9 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
         if (!pos) return;
 
-        const nearestCell = findNearestCell(pos.x, pos.y);
+        const cellsWithDisplay = getCellsWithDisplay();
+        const cellId = findNearestCellId(pos.x, pos.y, cellsWithDisplay);
+        const nearestCell = shatraBoard.getCellById(cellId!);
 
         if (nearestCell) {
 
@@ -393,7 +382,9 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
         if (!pos) return;
 
-        const nearestCell = findNearestCell(pos.x, pos.y);
+        const cellsWithDisplay = getCellsWithDisplay();
+        const cellId = findNearestCellId(pos.x, pos.y, cellsWithDisplay);
+        const nearestCell = shatraBoard.getCellById(cellId!);
 
 
         if (nearestCell) {
@@ -438,7 +429,10 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
             return;
         }
 
-        const nearestCell = findNearestCell(pos.x, pos.y);
+        const cellsWithDisplay = getCellsWithDisplay();
+        const cellId = findNearestCellId(pos.x, pos.y, cellsWithDisplay);
+        const nearestCell = shatraBoard.getCellById(cellId!);
+
         const fromCell = shatraBoard.getCellById(draggedPiece.cellId);
 
         if (!fromCell) {
@@ -558,8 +552,9 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         const pos = stage.getPointerPosition();
         if (!pos) return;
 
-
-        const clickedCell = findNearestCell(pos.x, pos.y);
+        const cellsWithDisplay = getCellsWithDisplay();
+        const cellId = findNearestCellId(pos.x, pos.y, cellsWithDisplay);
+        const clickedCell = shatraBoard.getCellById(cellId!);
 
         if (!clickedCell) {
             setSelectedCell(null);
