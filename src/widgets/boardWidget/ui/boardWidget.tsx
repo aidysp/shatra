@@ -17,6 +17,7 @@ import { MoveInfo } from '@/entities/shatra/gameHistory/model/ShatraGameHistory'
 import { useFlipBoard } from '@/features/flipBoard/context/flipBoard.Context';
 import { findNearestCellId } from '@/shared/lib/board';
 import { AvailableMove } from '@/shared/types/board';
+import { useFigureSelection } from '@/features/figureSelection';
 
 interface BoardWidgetProps {
     shatraBoard: Board;
@@ -27,14 +28,6 @@ interface BoardWidgetProps {
     activeCaptureFigure: Cell | null;
     setActiveCaptureFigure: (Cell: Cell | null) => void;
 }
-
-// interface AvailableMove {
-//     cellId: number;
-//     x: number;
-//     y: number;
-
-//     isCapture: boolean;
-// }
 
 
 const BoardWidget: React.FC<BoardWidgetProps> = ({
@@ -48,8 +41,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 }) => {
 
 
-
-
+    const { selectedCell, selectFigure, clearSelection } = useFigureSelection();
 
     const [forcedCaptureFigures, setForcedCaptureFigures] = useState<number[]>([]);
 
@@ -83,7 +75,8 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
                 setAvailableMoves(normalMoves);
                 setCaptureMoves(captureMovesList);
-                setSelectedCell(activeFigure);
+                const displayCoords = shatraBoard.toDisplayCoords(activeFigure.x, activeFigure.y);
+                selectFigure(activeFigure, displayCoords);
             }
         } else {
             setActiveCaptureFigure(null);
@@ -158,7 +151,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
     const [hoveredCell, setHoveredCell] = useState<{ x: number, y: number } | null>(null);
 
 
-    const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
+
 
     const [animatingFigure, setAnimatingFigure] = useState<{
         figure: Figure;
@@ -196,7 +189,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         setAnimatingFigure(animatingFigure);
         setAvailableMoves([]);
         setCaptureMoves([]);
-        setSelectedCell(null);
+        clearSelection();
         setHoveredCell(null);
     }
 
@@ -241,8 +234,9 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
         }
 
-        if (selectedCell?.id === cell.id) {
-            setSelectedCell(null);
+
+        if (selectedCell?.cellId === cell.id) {
+            clearSelection();
             setHoveredCell(null);
             setAvailableMoves([]);
             setCaptureMoves([]);
@@ -252,7 +246,8 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
         if (cell.figure && cell.figure.color === shatraBoard.currentPlayer) {
 
-            setSelectedCell(cell);
+            const displayCoords = shatraBoard.toDisplayCoords(cell.x, cell.y);
+            selectFigure(cell, displayCoords);
 
             const moves = shatraBoard.getAvailableMoves(cell);
             const normalMoves: AvailableMove[] = [];
@@ -282,13 +277,16 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                 move.x === cell.x && move.y === cell.y
             );
 
-            if (isAvailableMove) {
-                performMoveWithAnimation(selectedCell, cell);
+            const fromCell = shatraBoard.getCellById(selectedCell.cellId);
+
+            if (isAvailableMove && fromCell) {
+                performMoveWithAnimation(fromCell, cell);
                 return;
             }
         }
 
-        setSelectedCell(null);
+
+        clearSelection();
         setHoveredCell(null);
         setAvailableMoves([]);
         setCaptureMoves([]);
@@ -371,7 +369,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                 setAvailableMoves(normalMoves);
 
                 setCaptureMoves(captureMovesList);
-                setSelectedCell(null);
+                clearSelection();
                 setHoveredCell(null);
             }
         }
@@ -450,7 +448,6 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                 const tempBoard = shatraBoard.clone();
                 const tempFrom = tempBoard.getCellById(fromCell.id)!;
 
-                // !!!
                 if (tempBoard.makeMove(tempFrom, tempFrom)) {
                     setShatraBoard(tempBoard);
                     setLastMove({
@@ -541,7 +538,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         setAvailableMoves([]);
         setCaptureMoves([]);
         setDraggedPiece(null);
-        setSelectedCell(null);
+        clearSelection();
     };
 
 
@@ -558,7 +555,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         const clickedCell = shatraBoard.getCellById(cellId!);
 
         if (!clickedCell) {
-            setSelectedCell(null);
+            clearSelection();
             setHoveredCell(null);
             setAvailableMoves([]);
             setCaptureMoves([]);
@@ -583,7 +580,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                 board={shatraBoard}
                 onFlip={(flippedBoard) => {
                     flushSync(() => {
-                        setSelectedCell(null);
+                        clearSelection();
                         setAvailableMoves([]);
                         setCaptureMoves([]);
                         setHoveredCell(null);
@@ -648,7 +645,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                                 isHovered={hoveredCell !== null &&
                                     hoveredCell.x === cell.x &&
                                     hoveredCell.y === cell.y}
-                                isSelected={selectedCell?.id === cell.id}
+                                isSelected={selectedCell?.cellId === cell.id}
                                 isActiveCaptureFigure={activeCaptureFigure}
                                 hasForcedCapture={hasForcedCapture}
                                 isAnimating={isAnimating}
