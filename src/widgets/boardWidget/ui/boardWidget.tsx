@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stage, Layer } from "react-konva";
 import { Layer as KonvaLayer } from 'konva/lib/Layer';
-import { ShatraBoard as Board, ShatraCell as Cell, ShatraBoard } from '@/entities';
+import { ShatraBoard as Board, ShatraCell as Cell } from '@/entities';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { Figure } from '@/entities/shatra/figure';
 import { flushSync } from 'react-dom';
@@ -16,6 +16,7 @@ import { FlipBoardButton } from '@/features/flipBoard';
 import { MoveInfo } from '@/entities/shatra/gameHistory/model/ShatraGameHistory';
 import { useFlipBoard } from '@/features/flipBoard/context/flipBoard.Context';
 import { findNearestCellId } from '@/shared/lib/board';
+import { AvailableMove } from '@/shared/types/board';
 
 interface BoardWidgetProps {
     shatraBoard: Board;
@@ -27,13 +28,13 @@ interface BoardWidgetProps {
     setActiveCaptureFigure: (Cell: Cell | null) => void;
 }
 
-interface AvailableMove {
-    cellId: number;
-    x: number;
-    y: number;
+// interface AvailableMove {
+//     cellId: number;
+//     x: number;
+//     y: number;
 
-    isCapture: boolean;
-}
+//     isCapture: boolean;
+// }
 
 
 const BoardWidget: React.FC<BoardWidgetProps> = ({
