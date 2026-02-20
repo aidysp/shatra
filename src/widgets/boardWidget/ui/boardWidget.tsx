@@ -19,6 +19,7 @@ import { findNearestCellId } from '@/shared/lib/board';
 import { AvailableMove } from '@/shared/types/board';
 import { useFigureSelection } from '@/features/figureSelection';
 import { useSound } from '@/features/sound';
+import { CELL_SIZE } from '@/shared/lib/board';
 
 interface BoardWidgetProps {
     shatraBoard: Board;
@@ -331,7 +332,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
             const displayCoords = shatraBoard.toDisplayCoords(logicalX, logicalY);
 
-            setDraggedPiece({ cellId, figure, originalX: displayCoords.x * 40 + 5, originalY: displayCoords.y * 40 + 5 });
+            setDraggedPiece({ cellId, figure, originalX: displayCoords.x * CELL_SIZE + 5, originalY: displayCoords.y * CELL_SIZE + 5 });
 
 
             const fromCell = shatraBoard.getCellById(cellId);
@@ -493,8 +494,8 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                             const finalDisplayCoords = shatraBoard.toDisplayCoords(toCell.x, toCell.y);
 
                             e.target.position({
-                                x: finalDisplayCoords.x * 40 + 5,
-                                y: finalDisplayCoords.y * 40 + 5
+                                x: finalDisplayCoords.x * CELL_SIZE + 5,
+                                y: finalDisplayCoords.y * CELL_SIZE + 5
                             });
                             setLastMove({
                                 from: fromCell,
@@ -517,8 +518,8 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         const displayCoords = shatraBoard.toDisplayCoords(fromCell.x, fromCell.y);
 
         e.target.position({
-            x: displayCoords.x * 40 + 5,
-            y: displayCoords.y * 40 + 5
+            x: displayCoords.x * CELL_SIZE + 5,
+            y: displayCoords.y * CELL_SIZE + 5
         });
 
 
@@ -605,8 +606,8 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                             );
 
                             const targetPos = targetDisplayCoords ? {
-                                targetX: targetDisplayCoords.x * 40 + 5,
-                                targetY: targetDisplayCoords.y * 40 + 5
+                                targetX: targetDisplayCoords.x * CELL_SIZE + 5,
+                                targetY: targetDisplayCoords.y * CELL_SIZE + 5
                             } : {};
 
 
