@@ -18,6 +18,7 @@ import { useFlipBoard } from '@/features/flipBoard/context/flipBoard.Context';
 import { findNearestCellId } from '@/shared/lib/board';
 import { AvailableMove } from '@/shared/types/board';
 import { useFigureSelection } from '@/features/figureSelection';
+import { useSound } from '@/features/sound';
 
 interface BoardWidgetProps {
     shatraBoard: Board;
@@ -103,20 +104,8 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
     const tempLayerRef = useRef<KonvaLayer>(null);
 
-    const moveSoundRef = useRef<HTMLAudioElement | null>(null);
 
-    useEffect(() => {
-        moveSoundRef.current = new Audio('/sounds/move_sound.mp3');
-    }, []);
-
-    const playMoveSound = () => {
-        if (moveSoundRef.current) {
-            moveSoundRef.current.currentTime = 0;
-            moveSoundRef.current.play().catch(error => {
-                console.warn("Error playMoveSound", error)
-            });
-        }
-    };
+    const { play: playMoveSound } = useSound('/sounds/move_sound.mp3');
 
 
     useEffect(() => {
