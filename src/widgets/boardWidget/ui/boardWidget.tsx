@@ -20,6 +20,7 @@ import { AvailableMove } from '@/shared/types/board';
 import { useFigureSelection } from '@/features/figureSelection';
 import { useSound } from '@/features/sound';
 import { CELL_SIZE } from '@/shared/lib/board';
+import { useCaptureChain } from '@/features/captureChain';
 
 interface BoardWidgetProps {
     shatraBoard: Board;
@@ -45,7 +46,16 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
     const { selectedCell, selectFigure, clearSelection } = useFigureSelection();
 
-    const [forcedCaptureFigures, setForcedCaptureFigures] = useState<number[]>([]);
+
+    const {
+        animatingFigure,
+        forcedCaptureFigures,
+        isChainActive,
+        startAnimation,
+        completeAnimation,
+        updateForcedCaptures,
+        endChain
+    } = useCaptureChain();
 
     useEffect(() => {
         if (shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
@@ -86,8 +96,8 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
         const forcedFigures = shatraBoard.getFiguresWithForcedCapture();
         const forcedFigureIds = forcedFigures.map(cell => cell.id);
-        setForcedCaptureFigures(forcedFigureIds);
-    }, [shatraBoard, setActiveCaptureFigure]);
+        updateForcedCaptures(forcedFigureIds);
+    }, [shatraBoard, updateForcedCaptures]);
 
 
     const [lastMove, setLastMove] = useState<{
@@ -142,14 +152,6 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
 
 
-
-    const [animatingFigure, setAnimatingFigure] = useState<{
-        figure: Figure;
-        fromCell: Cell;
-        toCell: Cell;
-    } | null>(null);
-
-
     const getCellsWithDisplay = () => {
         return shatraBoard.getCells.map((cell: Cell) => ({
             id: cell.id,
@@ -176,7 +178,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
 
         gameHistory!.addMove(animatingFigure.fromCell, animatingFigure.toCell);
 
-        setAnimatingFigure(animatingFigure);
+        startAnimation(from.figure!, from, to);
         setAvailableMoves([]);
         setCaptureMoves([]);
         clearSelection();
@@ -198,7 +200,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                 from: animatingFigure.fromCell,
                 to: animatingFigure.toCell
             });
-            setAnimatingFigure(null);
+            completeAnimation();
 
 
             const newBoard = shatraBoard.clone();
@@ -575,7 +577,7 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
                         setCaptureMoves([]);
                         setHoveredCell(null);
                         setDraggedPiece(null);
-                        setAnimatingFigure(null);
+                        endChain();
                     });
 
                     setShatraBoard(flippedBoard);
