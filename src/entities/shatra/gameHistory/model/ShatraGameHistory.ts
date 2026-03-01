@@ -11,7 +11,6 @@ export interface MoveInfo {
     from: ShatraCell;
     to: ShatraCell;
     notation: string;
-    isSpecialMove: boolean;
 }
 
 export class ShatraGameHistory {

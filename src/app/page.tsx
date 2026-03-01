@@ -20,10 +20,10 @@ export default function Home() {
     const board = new ShatraBoard();
     board.initCells();
     board.initFigures();
+    setShatraBoard(board);
 
     const history = new ShatraGameHistory(board);
     setGameHistory(history);
-    setShatraBoard(board);
   }, []);
 
 

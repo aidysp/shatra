@@ -109,7 +109,14 @@ const ShatraBoard: React.FC<ShatraBoardProps> = ({
     }, []);
 
 
-    const { handleAnimationComplete } = useMoveAnimation({ shatraBoard, setShatraBoard, animatingFigure, setLastMove, completeAnimation, playMoveSound })
+    const { handleAnimationComplete } = useMoveAnimation({
+        shatraBoard,
+        setShatraBoard,
+        animatingFigure,
+        setLastMove,
+        completeAnimation,
+        playMoveSound
+    })
 
 
 
@@ -134,7 +141,8 @@ const ShatraBoard: React.FC<ShatraBoardProps> = ({
         clearSelection,
         setLastMove,
         getCellsWithDisplay,
-        playMoveSound
+        playMoveSound,
+        gameHistory
     });
 
 
