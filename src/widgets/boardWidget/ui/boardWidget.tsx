@@ -6,7 +6,6 @@ import { Stage, Layer } from "react-konva";
 import { ShatraBoard as Board, ShatraCell as Cell } from '@/entities';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { flushSync } from 'react-dom';
-import { GameState } from '@/entities/shatra/config/GameState';
 import { BoardCell } from '@/shared/ui/board';
 import { ShatraGameHistory as GameHistory } from '@/entities';
 import { MoveHistoryWidget } from '@/widgets/moveHistoryWidget';
@@ -20,6 +19,7 @@ import { useSound } from '@/features/sound';
 import { CELL_SIZE } from '@/shared/lib/board';
 import { useCaptureChain } from '@/features/captureChain';
 import { useDragAndDrop } from '@/features/dragAndDrop';
+import { useMoveIndication } from '@/features/moveIndication';
 
 
 interface BoardWidgetProps {
@@ -43,6 +43,10 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
     setActiveCaptureFigure
 }) => {
 
+    // const [availableMoves, setAvailableMoves] = useState<AvailableMove[]>([]);
+
+    const [captureMoves, setCaptureMoves] = useState<AvailableMove[]>([]);
+    const [hoveredCell, setHoveredCell] = useState<{ x: number, y: number } | null>(null);
 
     const { selectedCell, selectFigure, clearSelection } = useFigureSelection();
 
@@ -57,47 +61,49 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         endChain
     } = useCaptureChain();
 
-    useEffect(() => {
-        if (shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
-            shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
-            const activeFigure = shatraBoard.getActiveCaptureFigure();
-            setActiveCaptureFigure(activeFigure);
+    const { availableMoves, setAvailableMoves } = useMoveIndication({ shatraBoard, setActiveCaptureFigure, setCaptureMoves, selectFigure, updateForcedCaptures })
 
-            if (activeFigure) {
-                const moves = shatraBoard.getAvailableMoves(activeFigure);
-                const normalMoves: AvailableMove[] = [];
-                const captureMovesList: AvailableMove[] = [];
+    // useEffect(() => {
+    //     if (shatraBoard.gameState === GameState.ACTIVE_CAPTURE_CHAIN ||
+    //         shatraBoard.gameState === GameState.BIY_RIGHTS_ACTIVE) {
+    //         const activeFigure = shatraBoard.getActiveCaptureFigure();
+    //         setActiveCaptureFigure(activeFigure);
 
-                moves.forEach(moveCell => {
-                    const moveInfo: AvailableMove = {
-                        cellId: moveCell.id,
-                        x: moveCell.x,
-                        y: moveCell.y,
+    //         if (activeFigure) {
+    //             const moves = shatraBoard.getAvailableMoves(activeFigure);
+    //             const normalMoves: AvailableMove[] = [];
+    //             const captureMovesList: AvailableMove[] = [];
 
-                        isCapture: shatraBoard.isValidCaptureMove(activeFigure, moveCell)
-                    };
+    //             moves.forEach(moveCell => {
+    //                 const moveInfo: AvailableMove = {
+    //                     cellId: moveCell.id,
+    //                     x: moveCell.x,
+    //                     y: moveCell.y,
 
-                    if (moveInfo.isCapture) {
-                        captureMovesList.push(moveInfo);
-                    } else {
-                        normalMoves.push(moveInfo);
-                    }
-                });
+    //                     isCapture: shatraBoard.isValidCaptureMove(activeFigure, moveCell)
+    //                 };
+
+    //                 if (moveInfo.isCapture) {
+    //                     captureMovesList.push(moveInfo);
+    //                 } else {
+    //                     normalMoves.push(moveInfo);
+    //                 }
+    //             });
 
 
-                setAvailableMoves(normalMoves);
-                setCaptureMoves(captureMovesList);
-                const displayCoords = shatraBoard.toDisplayCoords(activeFigure.x, activeFigure.y);
-                selectFigure(activeFigure, displayCoords);
-            }
-        } else {
-            setActiveCaptureFigure(null);
-        }
+    //             setAvailableMoves(normalMoves);
+    //             setCaptureMoves(captureMovesList);
+    //             const displayCoords = shatraBoard.toDisplayCoords(activeFigure.x, activeFigure.y);
+    //             selectFigure(activeFigure, displayCoords);
+    //         }
+    //     } else {
+    //         setActiveCaptureFigure(null);
+    //     }
 
-        const forcedFigures = shatraBoard.getFiguresWithForcedCapture();
-        const forcedFigureIds = forcedFigures.map(cell => cell.id);
-        updateForcedCaptures(forcedFigureIds);
-    }, [shatraBoard, updateForcedCaptures]);
+    //     const forcedFigures = shatraBoard.getFiguresWithForcedCapture();
+    //     const forcedFigureIds = forcedFigures.map(cell => cell.id);
+    //     updateForcedCaptures(forcedFigureIds);
+    // }, [shatraBoard, updateForcedCaptures]);
 
 
     const [lastMove, setLastMove] = useState<{
@@ -133,11 +139,6 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize)
     }, []);
-
-
-    const [availableMoves, setAvailableMoves] = useState<AvailableMove[]>([]);
-    const [captureMoves, setCaptureMoves] = useState<AvailableMove[]>([]);
-    const [hoveredCell, setHoveredCell] = useState<{ x: number, y: number } | null>(null);
 
 
 
