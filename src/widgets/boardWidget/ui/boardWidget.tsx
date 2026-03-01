@@ -18,7 +18,10 @@ import { CELL_SIZE } from '@/shared/lib/board';
 import { useCaptureChain } from '@/features/captureChain';
 import { useDragAndDrop } from '@/features/dragAndDrop';
 import { useMoveIndication } from '@/features/moveIndication';
-import { useBoardClick } from '@/features/boardClick/model/useBoardClick';
+import { useBoardClick } from '@/features/boardClick';
+import { useMoveAnimation } from '@/features/moveAnimation';
+
+
 
 
 interface BoardWidgetProps {
@@ -50,8 +53,8 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
         animatingFigure,
         forcedCaptureFigures,
         isChainActive,
-        startAnimation,
         completeAnimation,
+        startAnimation,
         updateForcedCaptures,
         endChain
     } = useCaptureChain();
@@ -108,154 +111,10 @@ const BoardWidget: React.FC<BoardWidgetProps> = ({
     }, []);
 
 
+    const { handleAnimationComplete } = useMoveAnimation({ shatraBoard, setShatraBoard, animatingFigure, setLastMove, completeAnimation, playMoveSound })
 
 
 
-
-    // const performMoveWithAnimation = (from: Cell, to: Cell) => {
-
-    //     if (!shatraBoard.isValidMove(from, to)) {
-    //         return;
-    //     }
-
-    //     const animatingFigure = {
-    //         figure: from.figure!,
-    //         fromCell: from,
-    //         toCell: to
-    //     };
-
-    //     gameHistory!.addMove(animatingFigure.fromCell, animatingFigure.toCell);
-
-    //     startAnimation(from.figure!, from, to);
-    //     setAvailableMoves([]);
-    //     setCaptureMoves([]);
-    //     clearSelection();
-    //     setHoveredCell(null);
-    // }
-
-
-    const handleAnimationComplete = () => {
-        if (!animatingFigure) return;
-
-
-
-        flushSync(() => {
-            shatraBoard.makeMove(animatingFigure.fromCell, animatingFigure.toCell);
-
-            setShatraBoard(shatraBoard.clone());
-
-            setLastMove({
-                from: animatingFigure.fromCell,
-                to: animatingFigure.toCell
-            });
-            completeAnimation();
-
-
-            const newBoard = shatraBoard.clone();
-
-            setShatraBoard(newBoard);
-        });
-
-        playMoveSound();
-
-    }
-
-    // const handleCellClick = (cell: Cell) => {
-
-    //     if (activeCaptureFigure) {
-    //         const isAvailableForActiveFigure = captureMoves.some(move =>
-    //             move.x === cell.x && move.y === cell.y
-    //         );
-
-    //         if (isAvailableForActiveFigure) {
-    //             performMoveWithAnimation(activeCaptureFigure, cell);
-    //             return;
-    //         }
-
-    //     }
-
-
-    //     if (selectedCell?.cellId === cell.id) {
-    //         clearSelection();
-    //         setHoveredCell(null);
-    //         setAvailableMoves([]);
-    //         setCaptureMoves([]);
-    //         return;
-    //     }
-
-
-    //     if (cell.figure && cell.figure.color === shatraBoard.currentPlayer) {
-
-    //         const displayCoords = shatraBoard.toDisplayCoords(cell.x, cell.y);
-    //         selectFigure(cell, displayCoords);
-
-    //         const moves = shatraBoard.getAvailableMoves(cell);
-    //         const normalMoves: AvailableMove[] = [];
-    //         const captureMovesList: AvailableMove[] = [];
-
-    //         moves.forEach(moveCell => {
-
-    //             const moveInfo: AvailableMove = {
-    //                 cellId: moveCell.id,
-    //                 x: moveCell.x,
-    //                 y: moveCell.y,
-    //                 isCapture: shatraBoard.isValidCaptureMove(cell, moveCell)
-    //             };
-
-    //             normalMoves.push(moveInfo);
-    //             if (moveInfo.isCapture) {
-    //                 captureMovesList.push(moveInfo);
-    //             }
-    //         });
-    //         setAvailableMoves(normalMoves);
-    //         setCaptureMoves(captureMovesList);
-    //         return;
-    //     }
-
-    //     if (selectedCell) {
-    //         const isAvailableMove = availableMoves.some(move =>
-    //             move.x === cell.x && move.y === cell.y
-    //         );
-
-    //         const fromCell = shatraBoard.getCellById(selectedCell.cellId);
-
-    //         if (isAvailableMove && fromCell) {
-    //             performMoveWithAnimation(fromCell, cell);
-    //             return;
-    //         }
-    //     }
-
-
-    //     clearSelection();
-    //     setHoveredCell(null);
-    //     setAvailableMoves([]);
-    //     setCaptureMoves([]);
-
-    // };
-
-
-
-    // const handleStageClick = (e: KonvaEventObject<MouseEvent>) => {
-    //     const stage = e.target.getStage();
-    //     if (!stage) return;
-
-    //     const pos = stage.getPointerPosition();
-    //     if (!pos) return;
-
-    //     const cellsWithDisplay = getCellsWithDisplay();
-    //     const cellId = findNearestCellId(pos.x, pos.y, cellsWithDisplay);
-    //     const clickedCell = shatraBoard.getCellById(cellId!);
-
-    //     if (!clickedCell) {
-    //         clearSelection();
-    //         setHoveredCell(null);
-    //         setAvailableMoves([]);
-    //         setCaptureMoves([]);
-    //         return;
-    //     }
-
-    //     handleCellClick(clickedCell);
-    // };
 
 
     const { flipKey } = useFlipBoard();

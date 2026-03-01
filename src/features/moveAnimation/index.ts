@@ -1,0 +1,1 @@
+export { useMoveAnimation } from './model/useMoveAnimation'
