@@ -4,7 +4,7 @@ import { Layer as KonvaLayer } from 'konva/lib/Layer';
 
 import { GameState, ShatraBoard, ShatraCell } from "@/entities";
 import { Biy, Figure } from "@/entities/shatra/figure";
-import { SelectedFigure } from "@/features/figureSelection";
+import { SelectedFigure } from "@/features/shatraBoard/model/figureSelection";
 import { CELL_SIZE, findNearestCellId } from "@/shared/lib/board";
 import { AvailableMove } from "@/shared/types/board";
 

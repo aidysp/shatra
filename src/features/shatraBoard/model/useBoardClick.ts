@@ -1,6 +1,6 @@
 import { ShatraBoard, ShatraCell, ShatraGameHistory } from "@/entities";
 import { Figure } from "@/entities/shatra/figure";
-import { SelectedFigure } from "@/features/figureSelection";
+import { SelectedFigure } from "./useFigureSelection.types";
 import { findNearestCellId } from "@/shared/lib/board";
 import { AvailableMove } from "@/shared/types/board";
 import { KonvaEventObject } from "konva/lib/Node";

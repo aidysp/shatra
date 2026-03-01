@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react';
-import { AnimatingFigure, CaptureChainState } from './types';
+import { CaptureChainState } from './useCaptureChain.types';
 import { ShatraCell as Cell } from '@/entities';
 import { Figure } from '@/entities/shatra/figure';
 

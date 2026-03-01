@@ -3,7 +3,7 @@
 
 import { ShatraBoard, ShatraCell, ShatraGameHistory } from '@/entities';
 import { FlipBoardProvider } from '@/features/flipBoard/context/flipBoard.Context';
-import { BoardWidget } from '@/widgets/boardWidget';
+import { GameShatraBoardWidget } from '@/widgets/GameShatraBoardWidget';
 import { useEffect, useState } from 'react';
 
 
@@ -35,7 +35,8 @@ export default function Home() {
       <FlipBoardProvider>
         <div className='flex justify-center items-center w-[100%] h-[100vh]'>
           <div className='w-[280px] h-[560px] max-w-[100%] max-h-[100%]  overflow-hidden'>
-            <BoardWidget
+
+            <GameShatraBoardWidget
               shatraBoard={shatraBoard}
               setShatraBoard={setShatraBoard}
               gameHistory={gameHistory}

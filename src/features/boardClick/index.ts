@@ -1,1 +1,0 @@
-export { useBoardClick } from './model/useBoardClick';

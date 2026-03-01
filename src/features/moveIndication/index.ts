@@ -1,1 +1,0 @@
-export { useMoveIndication } from './model/useMoveIndication';

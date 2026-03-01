@@ -5,7 +5,7 @@ interface moveHistoryProps {
 }
 
 
-const MoveHistoryWidget: React.FC<moveHistoryProps> = ({ moves }) => {
+const MoveHistory: React.FC<moveHistoryProps> = ({ moves }) => {
     return (
         <div style={{
             position: 'absolute',
@@ -35,4 +35,4 @@ const MoveHistoryWidget: React.FC<moveHistoryProps> = ({ moves }) => {
     )
 }
 
-export { MoveHistoryWidget }
+export { MoveHistory }
