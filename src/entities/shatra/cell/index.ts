@@ -1,0 +1,1 @@
+export { ShatraCell } from './model/ShatraCell';
