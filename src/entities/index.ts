@@ -1,7 +1,6 @@
 export {
     ShatraBoard,
     ShatraCell,
-    ShatraGameHistory,
     Colors,
     Player,
     GameState,
