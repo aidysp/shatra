@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Layer as KonvaLayer } from 'konva/lib/Layer';
 
-import { GameState, ShatraBoard, ShatraCell, ShatraGameHistory } from "@/entities";
+import { GameState, ShatraBoard, ShatraCell } from "@/entities";
 import { Biy, Figure } from "@/entities/shatra/figure";
 import { SelectedFigure } from "./useFigureSelection.types";
 import { CELL_SIZE, findNearestCellId } from "@/shared/lib/board";
@@ -30,7 +30,7 @@ interface UseDragAndDropProps {
         displayY: number
     }[];
     playMoveSound: () => void;
-    gameHistory: ShatraGameHistory | null;
+    // gameHistory: ShatraGameHistory | null;
 }
 
 interface UseDragAndDropReturn {
@@ -38,7 +38,6 @@ interface UseDragAndDropReturn {
     handleDragEnd: (e: KonvaEventObject<MouseEvent>) => void;
     handleDragMove: (e: KonvaEventObject<DragEvent>) => void;
     handleMouseMove: (e: KonvaEventObject<MouseEvent>) => void;
-    setDraggedPiece: (e: DraggedPiece | null) => void;
     tempLayerRef: React.RefObject<KonvaLayer | null>;
     hoveredCell: { x: number; y: number } | null;
 }
@@ -67,7 +66,7 @@ export const useDragAndDrop = ({
     setLastMove,
     getCellsWithDisplay,
     playMoveSound,
-    gameHistory
+    // gameHistory
 }: UseDragAndDropProps): UseDragAndDropReturn => {
 
     const tempLayerRef = useRef<KonvaLayer>(null);
@@ -282,7 +281,6 @@ export const useDragAndDrop = ({
 
                         if (moveSuccess) {
                             setShatraBoard(tempBoard);
-                            gameHistory!.addMove(fromCell, toCell);
                             const finalDisplayCoords = shatraBoard.toDisplayCoords(toCell.x, toCell.y);
 
                             e.target.position({
@@ -330,7 +328,6 @@ export const useDragAndDrop = ({
         handleDragEnd,
         handleDragMove,
         handleMouseMove,
-        setDraggedPiece,
         tempLayerRef,
         hoveredCell
     }

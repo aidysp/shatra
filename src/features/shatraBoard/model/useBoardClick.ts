@@ -1,4 +1,4 @@
-import { ShatraBoard, ShatraCell, ShatraGameHistory } from "@/entities";
+import { ShatraBoard, ShatraCell } from "@/entities";
 import { Figure } from "@/entities/shatra/figure";
 import { SelectedFigure } from "./useFigureSelection.types";
 import { findNearestCellId } from "@/shared/lib/board";
@@ -13,7 +13,6 @@ interface useBoardClickReturn {
 
 interface useBoardClickProps {
     shatraBoard: ShatraBoard;
-    gameHistory: ShatraGameHistory | null;
     startAnimation: (figure: Figure, fromCell: ShatraCell, toCell: ShatraCell) => void;
     setAvailableMoves: (e: AvailableMove[]) => void;
     setCaptureMoves: (e: AvailableMove[]) => void;
@@ -29,7 +28,6 @@ interface useBoardClickProps {
 
 export const useBoardClick = ({
     shatraBoard,
-    gameHistory,
     startAnimation,
     setAvailableMoves,
     setCaptureMoves,
@@ -60,13 +58,7 @@ export const useBoardClick = ({
             return;
         }
 
-        const animatingFigure = {
-            figure: from.figure!,
-            fromCell: from,
-            toCell: to
-        };
-
-        gameHistory!.addMove(animatingFigure.fromCell, animatingFigure.toCell);
+        shatraBoard.recordMove(from, to);
 
         startAnimation(from.figure!, from, to);
         setAvailableMoves([]);

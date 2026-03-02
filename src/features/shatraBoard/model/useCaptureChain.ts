@@ -9,7 +9,6 @@ export const useCaptureChain = () => {
     const [state, setState] = useState<CaptureChainState>({
         animatingFigure: null,
         forcedCaptureFigures: [],
-        isChainActive: false
     });
 
     const startAnimation = useCallback((
@@ -29,7 +28,6 @@ export const useCaptureChain = () => {
         setState(prev => ({
             ...prev,
             animatingFigure: null
-            // isChainActive не сбрасываем - цепочка может продолжаться
         }));
     }, []);
 
@@ -42,14 +40,6 @@ export const useCaptureChain = () => {
     }, []);
 
 
-    const endChain = useCallback(() => {
-        setState({
-            animatingFigure: null,
-            forcedCaptureFigures: [],
-            isChainActive: false
-        });
-    }, []);
-
 
     const canFigureCapture = useCallback((cellId: number): boolean => {
         return state.forcedCaptureFigures.includes(cellId);
@@ -58,12 +48,10 @@ export const useCaptureChain = () => {
     return {
         animatingFigure: state.animatingFigure,
         forcedCaptureFigures: state.forcedCaptureFigures,
-        isChainActive: state.isChainActive,
 
         startAnimation,
         completeAnimation,
         updateForcedCaptures,
-        endChain,
         canFigureCapture
     };
 };

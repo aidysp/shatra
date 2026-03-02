@@ -1,12 +1,10 @@
 'use client'
 
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Stage, Layer } from "react-konva";
 import { ShatraBoard as Board, ShatraCell as Cell } from '@/entities';
 import { BoardCell } from '@/shared/ui/board';
-import { ShatraGameHistory as GameHistory } from '@/entities';
-import { MoveInfo } from '@/entities/shatra/gameHistory/model/ShatraGameHistory';
 import { AvailableMove } from '@/shared/types/board';
 import { useFigureSelection } from '../model/useFigureSelection';
 import { useSound } from '../model/useSound';
@@ -20,12 +18,10 @@ import { useMoveAnimation } from '../model/useMoveAnimation';
 
 
 
+
 interface ShatraBoardProps {
     shatraBoard: Board;
     setShatraBoard: (shatraBoard: Board) => void;
-    gameHistory: GameHistory | null;
-    setGameHistory: (GameHistory: GameHistory) => void;
-    moves: MoveInfo[] | [];
     activeCaptureFigure: Cell | null;
     setActiveCaptureFigure: (Cell: Cell | null) => void;
     flipKey: number;
@@ -35,9 +31,6 @@ interface ShatraBoardProps {
 const ShatraBoard: React.FC<ShatraBoardProps> = ({
     shatraBoard,
     setShatraBoard,
-    gameHistory,
-    setGameHistory,
-    moves,
     activeCaptureFigure,
     setActiveCaptureFigure,
     flipKey
@@ -50,18 +43,15 @@ const ShatraBoard: React.FC<ShatraBoardProps> = ({
     const {
         animatingFigure,
         forcedCaptureFigures,
-        isChainActive,
         completeAnimation,
         startAnimation,
         updateForcedCaptures,
-        endChain
     } = useCaptureChain();
 
     const { availableMoves, setAvailableMoves } = useMoveIndication({ shatraBoard, setActiveCaptureFigure, setCaptureMoves, selectFigure, updateForcedCaptures })
 
     const { handleStageClick, getCellsWithDisplay } = useBoardClick({
         shatraBoard,
-        gameHistory,
         startAnimation,
         setAvailableMoves,
         setCaptureMoves,
@@ -82,31 +72,31 @@ const ShatraBoard: React.FC<ShatraBoardProps> = ({
         to: null
     });
 
-    const [windowSize, setWindowSize] = useState({
-        width: 0,
-        height: 0,
-    });
+    // const [windowSize, setWindowSize] = useState({
+    //     width: 0,
+    //     height: 0,
+    // });
 
 
     const { play: playMoveSound } = useSound('/sounds/move_sound.mp3');
 
 
-    useEffect(() => {
-        setWindowSize({
-            width: window.innerWidth,
-            height: window.innerHeight
-        });
+    // useEffect(() => {
+    //     setWindowSize({
+    //         width: window.innerWidth,
+    //         height: window.innerHeight
+    //     });
 
-        const handleResize = () => {
-            setWindowSize({
-                width: window.innerWidth,
-                height: window.innerHeight,
-            })
-        }
+    //     const handleResize = () => {
+    //         setWindowSize({
+    //             width: window.innerWidth,
+    //             height: window.innerHeight,
+    //         })
+    //     }
 
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize)
-    }, []);
+    //     window.addEventListener('resize', handleResize);
+    //     return () => window.removeEventListener('resize', handleResize)
+    // }, []);
 
 
     const { handleAnimationComplete } = useMoveAnimation({
@@ -126,7 +116,6 @@ const ShatraBoard: React.FC<ShatraBoardProps> = ({
         handleDragEnd,
         handleDragMove,
         handleMouseMove,
-        setDraggedPiece,
         tempLayerRef
     } = useDragAndDrop({
         shatraBoard,
@@ -142,9 +131,8 @@ const ShatraBoard: React.FC<ShatraBoardProps> = ({
         setLastMove,
         getCellsWithDisplay,
         playMoveSound,
-        gameHistory
+        // gameHistory
     });
-
 
 
     return (

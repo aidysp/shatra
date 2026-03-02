@@ -11,10 +11,5 @@ export interface AnimatingFigure {
 
 export interface CaptureChainState {
     animatingFigure: AnimatingFigure | null;
-
-
     forcedCaptureFigures: number[];
-
-
-    isChainActive: boolean;
 }

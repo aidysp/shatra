@@ -2,7 +2,18 @@
 import { ShatraCell as Cell, Colors, GameState, Player } from "@/entities/shatra";
 import { Baatyr, Biy, Figure, Shatra } from "../../figure";
 
-
+export interface MoveRecord {
+    from: Cell;
+    to: Cell;
+    player: Player;
+    moveNumber: number;
+    notation: string;
+    isChain?: boolean;
+    chainMoves?: {
+        from: Cell;
+        to: Cell;
+    }[];
+}
 
 export class ShatraBoard {
     protected cells: Cell[] = [];
@@ -11,6 +22,66 @@ export class ShatraBoard {
     public __currentPlayer: Player = Player.WHITE;
     private __isFlipped: boolean = false;
     private __gameState: GameState = GameState.NORMAL;
+
+    private moveHistory: MoveRecord[] = [];
+
+
+    public getMoveHistory(): MoveRecord[] {
+        return this.moveHistory;
+    }
+
+
+    public recordMove(from: Cell, to: Cell) {
+        const currentPlayer = this.currentPlayer;
+        const lastMove = this.moveHistory[this.moveHistory.length - 1];
+
+
+        if (this.moveHistory.length === 0) {
+
+            const moveRecord: MoveRecord = {
+                from,
+                to,
+                player: currentPlayer,
+                moveNumber: 1,
+                notation: `${from.id}-${to.id}`,
+                isChain: false
+            };
+            this.moveHistory.push(moveRecord);
+            return;
+        }
+
+
+        if (lastMove.player === currentPlayer) {
+
+            if (!lastMove.chainMoves) {
+                lastMove.chainMoves = [{
+                    from: lastMove.from,
+                    to: lastMove.to
+                }];
+            }
+
+            lastMove.chainMoves.push({ from, to });
+
+
+            lastMove.to = to;
+            lastMove.notation = `${lastMove.from.id}-${to.id}`;
+            lastMove.isChain = true;
+
+        } else {
+            const moveRecord: MoveRecord = {
+                from,
+                to,
+                player: currentPlayer,
+                moveNumber: this.moveHistory.length + 1,
+                notation: `${from.id}-${to.id}`,
+                isChain: false
+            };
+            this.moveHistory.push(moveRecord);
+
+        }
+    }
+
+
     private activeWhiteBiyFigure: Cell | null = null;
     private activeBlackBiyFigure: Cell | null = null;
     private captureSession?: {
@@ -946,6 +1017,8 @@ export class ShatraBoard {
         };
 
         newBoard.__isFlipped = this.__isFlipped;
+
+        newBoard.moveHistory = [...this.moveHistory];
 
 
         return newBoard;

@@ -1,1 +1,1 @@
-export { MoveHistory } from './ui/moveHistoryWidget';
+export { MoveHistory } from './ui/moveHistory';

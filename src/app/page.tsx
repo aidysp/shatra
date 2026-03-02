@@ -1,7 +1,8 @@
 'use client'
 
 
-import { ShatraBoard, ShatraCell, ShatraGameHistory } from '@/entities';
+import { ShatraBoard, ShatraCell } from '@/entities';
+import { MoveRecord } from '@/entities/shatra/board/model/ShatraBoard';
 import { FlipBoardProvider } from '@/features/flipBoard/context/flipBoard.Context';
 import { GameShatraBoardWidget } from '@/widgets/GameShatraBoardWidget';
 import { useEffect, useState } from 'react';
@@ -12,8 +13,8 @@ import { useEffect, useState } from 'react';
 export default function Home() {
 
   const [shatraBoard, setShatraBoard] = useState<ShatraBoard>(new ShatraBoard());
-  const [gameHistory, setGameHistory] = useState<ShatraGameHistory | null>(null);
-  const moves = gameHistory?.getAllMoves() || [];
+  const [moves, setMoves] = useState<MoveRecord[]>([]);
+
   const [activeCaptureFigure, setActiveCaptureFigure] = useState<ShatraCell | null>(null);
 
   useEffect(() => {
@@ -21,10 +22,13 @@ export default function Home() {
     board.initCells();
     board.initFigures();
     setShatraBoard(board);
-
-    const history = new ShatraGameHistory(board);
-    setGameHistory(history);
   }, []);
+
+  useEffect(() => {
+    if (shatraBoard) {
+      setMoves(shatraBoard.getMoveHistory?.() || []);
+    }
+  }, [shatraBoard]);
 
 
 
@@ -39,8 +43,6 @@ export default function Home() {
             <GameShatraBoardWidget
               shatraBoard={shatraBoard}
               setShatraBoard={setShatraBoard}
-              gameHistory={gameHistory}
-              setGameHistory={setGameHistory}
               moves={moves}
               activeCaptureFigure={activeCaptureFigure}
               setActiveCaptureFigure={setActiveCaptureFigure}
