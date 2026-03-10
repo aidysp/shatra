@@ -1,11 +1,11 @@
-import { Figures } from "@/entities/shatra/config/Figures";
-import { Player } from "@/entities/shatra/config/Player";
-import Konva from "konva";
-import { KonvaEventObject } from "konva/lib/Node";
 import React from "react";
+import Konva from "konva";
 import { Image } from "react-konva";
+import { KonvaEventObject } from "konva/lib/Node";
 import useImage from "use-image";
 
+import { Figures } from "@/entities/shatra/config/Figures";
+import { Player } from "@/entities/shatra/config/Player";
 
 
 type FigureProps = {

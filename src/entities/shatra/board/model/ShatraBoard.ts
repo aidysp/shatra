@@ -1,6 +1,6 @@
-
-import { ShatraCell as Cell, Colors, GameState, Player } from "@/entities/shatra";
 import { Baatyr, Biy, Figure, Shatra } from "../../figure";
+import { ShatraCell as Cell, GameState, Player } from "@/entities/shatra";
+import { Colors } from "@/entities/shatra";
 
 export interface MoveRecord {
     from: Cell;

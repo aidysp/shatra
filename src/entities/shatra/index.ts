@@ -1,3 +1,3 @@
 export { ShatraBoard } from './board'
 export { ShatraCell } from './cell';
-export { Colors, Player, GameState, Figures } from './config';
+export { Player, GameState, Figures, Colors } from './config';

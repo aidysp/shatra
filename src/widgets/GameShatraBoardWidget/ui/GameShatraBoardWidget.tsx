@@ -1,16 +1,13 @@
 'use client'
 
-
-import { ShatraBoard as Board, ShatraCell as Cell } from '@/entities';
-import { MoveRecord } from '@/entities/shatra/board/model/ShatraBoard';
 import { FlipBoardButton } from '@/features/flipBoard';
 import { useFlipBoard } from '@/features/flipBoard/context/flipBoard.Context';
 import { MoveHistory } from '@/features/moveHistory';
 import { ShatraBoard } from "@/features/shatraBoard";
 
 
-
-
+import { ShatraBoard as Board, ShatraCell as Cell } from '@/entities';
+import { MoveRecord } from '@/entities/shatra/board/model/ShatraBoard';
 
 
 interface GameShatraBoardWidgetProps {

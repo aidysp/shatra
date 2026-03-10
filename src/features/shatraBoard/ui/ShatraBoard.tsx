@@ -3,12 +3,15 @@
 
 import { useState } from 'react';
 import { Stage, Layer } from "react-konva";
+
 import { ShatraBoard as Board, ShatraCell as Cell } from '@/entities';
-import { BoardCell } from '@/shared/ui/board';
+import { BoardCell } from '@/entities/shatra/ui';
+
 import { AvailableMove } from '@/shared/types/board';
+import { CELL_SIZE } from '@/shared/lib/board';
+
 import { useFigureSelection } from '../model/useFigureSelection';
 import { useSound } from '../model/useSound';
-import { CELL_SIZE } from '@/shared/lib/board';
 import { useCaptureChain } from '../model/useCaptureChain';
 import { useDragAndDrop } from '../model/useDragAndDrop';
 import { useMoveIndication } from '../model/useMoveIndication';

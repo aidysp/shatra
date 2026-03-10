@@ -1,2 +1,2 @@
 export * from './coordinates';
-export * from './constants'
+export * from './constants';
