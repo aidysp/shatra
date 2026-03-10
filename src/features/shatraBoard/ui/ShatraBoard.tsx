@@ -130,8 +130,7 @@ const ShatraBoard: React.FC<ShatraBoardProps> = ({
         clearSelection,
         setLastMove,
         getCellsWithDisplay,
-        playMoveSound,
-        // gameHistory
+        playMoveSound
     });
 
 

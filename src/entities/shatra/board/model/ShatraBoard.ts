@@ -35,6 +35,7 @@ export class ShatraBoard {
         const currentPlayer = this.currentPlayer;
         const lastMove = this.moveHistory[this.moveHistory.length - 1];
 
+        console.log(lastMove);
 
         if (this.moveHistory.length === 0) {
 
@@ -175,23 +176,28 @@ export class ShatraBoard {
 
         const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color === Player.WHITE ? Player.BLACK : Player.WHITE);
         if (extractionMoves.some(cell => cell.id === to.id)) {
-            to.figure = from.figure;
-            from.figure = null;
+            // to.figure = from.figure;
+            // from.figure = null;
 
-            this.lastMoves[this.currentPlayer] = {
-                from: from,
-                to: to,
-                figureId: to.figure!.id
-            };
+            // this.lastMoves[this.currentPlayer] = {
+            //     from: from,
+            //     to: to,
+            //     figureId: to.figure!.id
+            // };
+
+            this.applyMove(from, to);
 
             this.captureSession = undefined;
             this.__gameState = GameState.NORMAL;
-            this.switchPlayer();
+
+            // this.switchPlayer();
+
             return true;
         }
 
         return false;
     }
+
     private handleBiyForcedMove(from: Cell, to: Cell): boolean {
 
         const activeBiyFigure = this.getActiveBiyFigure(this.currentPlayer);
@@ -216,18 +222,22 @@ export class ShatraBoard {
                 }
             }
             else {
-                to.figure = from.figure;
-                from.figure = null;
+                // to.figure = from.figure;
+                // from.figure = null;
 
-                this.lastMoves[this.currentPlayer] = {
-                    from: from,
-                    to: to,
-                    figureId: to.figure!.id
-                };
+                // this.lastMoves[this.currentPlayer] = {
+                //     from: from,
+                //     to: to,
+                //     figureId: to.figure!.id
+                // };
+
+                this.applyMove(from, to);
 
                 this.clearActiveBiyFigure(this.currentPlayer);
                 this.__gameState = GameState.NORMAL;
-                this.switchPlayer();
+
+                // this.switchPlayer();
+
                 moveSuccess = true;
             }
 
@@ -1038,26 +1048,56 @@ export class ShatraBoard {
             return false;
         }
 
+        this.applyMove(from, to);
+
+        // if (!to.figure) {
+        //     return false;
+        // }
+
+        // to.figure = from.figure;
+        // from.figure = null;
+
+        // if (this.checkPromotion(to)) {
+        //     this.promoteToBaatyr(to);
+        // }
+
+        // this.lastMoves[this.currentPlayer] = {
+        //     from: from,
+        //     to: to,
+        //     figureId: to.figure.id
+        // };
+
+        // this.switchPlayer();
+        // this.updateReserveOrderState();
+
+
+        return true;
+    }
+
+
+    private applyMove(from: Cell, to: Cell, options?: { skipSwitch?: boolean; skipReserveUpdate?: boolean }): void {
+
         to.figure = from.figure;
         from.figure = null;
 
-        if (!to.figure) {
-            return false;
-        }
 
         if (this.checkPromotion(to)) {
             this.promoteToBaatyr(to);
         }
 
         this.lastMoves[this.currentPlayer] = {
-            from: from,
-            to: to,
-            figureId: to.figure.id
+            from,
+            to,
+            figureId: to.figure!.id
         };
 
-        this.switchPlayer();
-        this.updateReserveOrderState();
-        return true;
+        if (!options?.skipSwitch) {
+            this.switchPlayer();
+        }
+
+        if (!options?.skipReserveUpdate) {
+            this.updateReserveOrderState();
+        }
     }
 
 
@@ -1072,23 +1112,19 @@ export class ShatraBoard {
         }
 
 
-        if (!this.isValidMove(from, to)) {
-            return false;
-        }
-
         if (from === to && from.figure instanceof Biy && this.isBiyInOwnFortress(from)) {
-            this.lastMoves[this.currentPlayer] = {
-                from: from,
-                to: from,
-                figureId: from.figure.id
-            };
-            this.switchPlayer();
-            this.updateReserveOrderState();
-            return true;
-        }
+            // this.lastMoves[this.currentPlayer] = {
+            //     from: from,
+            //     to: from,
+            //     figureId: from.figure.id
+            // };
 
-        if (!this.isValidMove(from, to)) {
-            return false;
+
+            // this.switchPlayer();
+            // this.updateReserveOrderState();
+
+            this.applyMove(from, to);
+            return true;
         }
 
 
@@ -1109,15 +1145,18 @@ export class ShatraBoard {
             from === to &&
             from.figure instanceof Biy &&
             this.captureSession?.activeFigure.id === from.id) {
-            this.lastMoves[this.currentPlayer] = {
-                from: from,
-                to: from,
-                figureId: from.figure.id
-            };
 
-            if (this.checkPromotion(to)) {
-                this.promoteToBaatyr(to);
-            }
+            // this.lastMoves[this.currentPlayer] = {
+            //     from: from,
+            //     to: from,
+            //     figureId: from.figure.id
+            // };
+
+            // if (this.checkPromotion(to)) {
+            //     this.promoteToBaatyr(to);
+            // }
+
+            this.applyMove(from, to, { skipSwitch: true });
 
 
             this.finishCaptureChain();
@@ -1165,33 +1204,37 @@ export class ShatraBoard {
 
             if (isExtractionMove) {
                 if (hasReserves) {
-                    to.figure = from.figure;
-                    from.figure = null;
+                    // to.figure = from.figure;
+                    // from.figure = null;
 
-                    this.lastMoves[this.currentPlayer] = {
-                        from: from,
-                        to: to,
-                        figureId: to.figure!.id
-                    };
+                    // this.lastMoves[this.currentPlayer] = {
+                    //     from: from,
+                    //     to: to,
+                    //     figureId: to.figure!.id
+                    // };
 
-                    this.switchPlayer();
-                    this.updateReserveOrderState();
+                    // this.switchPlayer();
+                    // this.updateReserveOrderState();
+
+                    this.applyMove(from, to);
                     return true;
                 }
             } else {
                 const isNormalMove = from.figure.getPossibleMoves(from, this).some(move => move.x === to.x && move.y === to.y);
                 if (isNormalMove) {
-                    to.figure = from.figure;
-                    from.figure = null;
+                    // to.figure = from.figure;
+                    // from.figure = null;
 
-                    this.lastMoves[this.currentPlayer] = {
-                        from: from,
-                        to: to,
-                        figureId: to.figure!.id
-                    };
+                    // this.lastMoves[this.currentPlayer] = {
+                    //     from: from,
+                    //     to: to,
+                    //     figureId: to.figure!.id
+                    // };
 
-                    this.switchPlayer();
-                    this.updateReserveOrderState();
+                    // this.switchPlayer();
+                    // this.updateReserveOrderState();
+
+                    this.applyMove(from, to);
                     return true;
                 }
             }
@@ -1219,40 +1262,43 @@ export class ShatraBoard {
                         : this.getEmptyMiddleZoneCells(from.figure.color).some(cell => cell.id === to.id);
 
                     if (isNormalMove || isExtractionMove) {
-                        to.figure = from.figure;
-                        from.figure = null;
+                        // to.figure = from.figure;
+                        // from.figure = null;
 
-                        if (this.checkPromotion(to)) {
-                            this.promoteToBaatyr(to);
-                        }
+                        // if (this.checkPromotion(to)) {
+                        //     this.promoteToBaatyr(to);
+                        // }
 
-                        this.lastMoves[this.currentPlayer] = {
-                            from: from,
-                            to: to,
-                            figureId: to.figure!.id
-                        }
+                        // this.lastMoves[this.currentPlayer] = {
+                        //     from: from,
+                        //     to: to,
+                        //     figureId: to.figure!.id
+                        // }
 
-                        this.switchPlayer();
-                        this.updateReserveOrderState();
+                        // this.switchPlayer();
+                        // this.updateReserveOrderState();
+                        this.applyMove(from, to);
                         return true;
                     }
 
                 } else {
-                    to.figure = from.figure;
-                    from.figure = null;
+                    // to.figure = from.figure;
+                    // from.figure = null;
 
-                    if (this.checkPromotion(to)) {
-                        this.promoteToBaatyr(to);
-                    }
+                    // if (this.checkPromotion(to)) {
+                    //     this.promoteToBaatyr(to);
+                    // }
 
-                    this.lastMoves[this.currentPlayer] = {
-                        from: from,
-                        to: to,
-                        figureId: to.figure!.id
-                    }
+                    // this.lastMoves[this.currentPlayer] = {
+                    //     from: from,
+                    //     to: to,
+                    //     figureId: to.figure!.id
+                    // }
 
-                    this.switchPlayer();
-                    this.updateReserveOrderState();
+                    // this.switchPlayer();
+                    // this.updateReserveOrderState();
+
+                    this.applyMove(from, to);
                     return true;
                 }
             }
@@ -1269,39 +1315,44 @@ export class ShatraBoard {
         if (from.figure instanceof Biy && this.isBiyInOwnFortress(from) && from.figure.color === this.currentPlayer) {
             const extractionMoves = this.getEmptyMiddleZoneCells(from.figure.color);
             if (extractionMoves.some(cell => cell.id === to.id)) {
-                to.figure = from.figure;
-                from.figure = null;
+                // to.figure = from.figure;
+                // from.figure = null;
 
-                this.lastMoves[this.currentPlayer] = {
-                    from: from,
-                    to: to,
-                    figureId: to.figure!.id
-                };
 
-                this.switchPlayer();
-                this.updateReserveOrderState();
+                // this.lastMoves[this.currentPlayer] = {
+                //     from: from,
+                //     to: to,
+                //     figureId: to.figure!.id
+                // };
+
+                // this.switchPlayer();
+                // this.updateReserveOrderState();
+                this.applyMove(from, to);
                 return true;
             }
         }
 
 
 
-        to.figure = from.figure;
-        from.figure = null;
+        // to.figure = from.figure;
+        // from.figure = null;
 
-        if (this.checkPromotion(to)) {
-            this.promoteToBaatyr(to);
-        }
+        // if (this.checkPromotion(to)) {
+        //     this.promoteToBaatyr(to);
+        // }
 
-        this.lastMoves[this.currentPlayer] = {
-            from: from,
-            to: to,
-            figureId: to.figure!.id
-        }
+        // this.lastMoves[this.currentPlayer] = {
+        //     from: from,
+        //     to: to,
+        //     figureId: to.figure!.id
+        // }
 
-        this.switchPlayer();
+        // this.switchPlayer();
+        //   this.updateReserveOrderState();
+
+        this.applyMove(from, to);
+
         this.categorizeFiguresByColor();
-        this.updateReserveOrderState();
         return true;
     }
 
