@@ -22,7 +22,7 @@ const FlipBoardButton: React.FC<FlipBoardButtonProps> = ({ board, onFlip }) => {
     return (
         <button
             onClick={handleClick}
-            className="fixed bottom-15 right-55 z-50 px-4 py-2  text-black rounded  transition-colors cursor-pointer"
+            className="text-black rounded  transition-colors cursor-pointer"
         >
             {board.isFlipped ? '🔄Вид за белых' : '🔄Вид за чёрных'}
         </button>

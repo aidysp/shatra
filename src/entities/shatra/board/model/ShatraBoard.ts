@@ -35,7 +35,6 @@ export class ShatraBoard {
         const currentPlayer = this.currentPlayer;
         const lastMove = this.moveHistory[this.moveHistory.length - 1];
 
-        console.log(lastMove);
 
         if (this.moveHistory.length === 0) {
 

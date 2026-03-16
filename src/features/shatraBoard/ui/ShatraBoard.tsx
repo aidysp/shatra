@@ -75,31 +75,10 @@ const ShatraBoard: React.FC<ShatraBoardProps> = ({
         to: null
     });
 
-    // const [windowSize, setWindowSize] = useState({
-    //     width: 0,
-    //     height: 0,
-    // });
+
 
 
     const { play: playMoveSound } = useSound('/sounds/move_sound.mp3');
-
-
-    // useEffect(() => {
-    //     setWindowSize({
-    //         width: window.innerWidth,
-    //         height: window.innerHeight
-    //     });
-
-    //     const handleResize = () => {
-    //         setWindowSize({
-    //             width: window.innerWidth,
-    //             height: window.innerHeight,
-    //         })
-    //     }
-
-    //     window.addEventListener('resize', handleResize);
-    //     return () => window.removeEventListener('resize', handleResize)
-    // }, []);
 
 
     const { handleAnimationComplete } = useMoveAnimation({
@@ -138,72 +117,74 @@ const ShatraBoard: React.FC<ShatraBoardProps> = ({
 
 
     return (
-        <Stage
-            key={`${flipKey}`}
-            width={280}
-            height={560}
-            onClick={handleStageClick}
-            onTap={handleStageClick}
-        >
-            <Layer>
-                {
-                    shatraBoard.getCells.map(cell => {
+        <div className='w-[280px] h-[560px] max-w-[100%] max-h-[100%]  overflow-hidden'>
+            <Stage
+                key={`${flipKey}`}
+                width={280}
+                height={560}
+                onClick={handleStageClick}
+                onTap={handleStageClick}
+            >
+                <Layer>
+                    {
+                        shatraBoard.getCells.map(cell => {
 
-                        const displayCoords = shatraBoard.toDisplayCoords(cell.x, cell.y);
-
-
-                        const isAnimating = animatingFigure?.fromCell.id === cell.id;
-                        const hasForcedCapture = forcedCaptureFigures.includes(cell.id);
-
-                        const targetDisplayCoords = isAnimating && shatraBoard.toDisplayCoords(
-                            animatingFigure.toCell.x,
-                            animatingFigure.toCell.y
-                        );
-
-                        const targetPos = targetDisplayCoords ? {
-                            targetX: targetDisplayCoords.x * CELL_SIZE + 5,
-                            targetY: targetDisplayCoords.y * CELL_SIZE + 5
-                        } : {};
+                            const displayCoords = shatraBoard.toDisplayCoords(cell.x, cell.y);
 
 
+                            const isAnimating = animatingFigure?.fromCell.id === cell.id;
+                            const hasForcedCapture = forcedCaptureFigures.includes(cell.id);
 
-                        return <BoardCell
-                            key={`${cell.id}`}
+                            const targetDisplayCoords = isAnimating && shatraBoard.toDisplayCoords(
+                                animatingFigure.toCell.x,
+                                animatingFigure.toCell.y
+                            );
 
-                            id={cell.id}
-                            x={displayCoords.x}
-                            y={displayCoords.y}
-                            color={cell.color}
-                            figureColor={cell.figure?.color}
-                            figure={cell.figure?.logo}
-                            handleDragStart={createDragStartHandler(cell.id, cell.figure, cell.x, cell.y)}
-                            handleDragEnd={handleDragEnd}
-                            handleDragMove={handleDragMove}
-                            onMouseMove={handleMouseMove}
-                            isAvailableMove={availableMoves.some(move =>
-                                move.x === cell.x && move.y === cell.y
-                            )}
-                            isLastMove={lastMove.from?.id === cell.id || lastMove.to?.id === cell.id}
-                            isCaptureMove={captureMoves.some(move =>
-                                move.x === cell.x && move.y === cell.y
-                            )}
-                            isHovered={hoveredCell !== null &&
-                                hoveredCell.x === cell.x &&
-                                hoveredCell.y === cell.y}
-                            isSelected={selectedCell?.cellId === cell.id}
-                            isActiveCaptureFigure={activeCaptureFigure}
-                            hasForcedCapture={hasForcedCapture}
-                            isAnimating={isAnimating}
-                            onAnimationComplete={handleAnimationComplete}
-                            {...targetPos}
-                        />
-                    })
-                }
-            </Layer>
+                            const targetPos = targetDisplayCoords ? {
+                                targetX: targetDisplayCoords.x * CELL_SIZE + 5,
+                                targetY: targetDisplayCoords.y * CELL_SIZE + 5
+                            } : {};
 
 
-            <Layer ref={tempLayerRef} id="temp-layer" />
-        </Stage >
+
+                            return <BoardCell
+                                key={`${cell.id}`}
+
+                                id={cell.id}
+                                x={displayCoords.x}
+                                y={displayCoords.y}
+                                color={cell.color}
+                                figureColor={cell.figure?.color}
+                                figure={cell.figure?.logo}
+                                handleDragStart={createDragStartHandler(cell.id, cell.figure, cell.x, cell.y)}
+                                handleDragEnd={handleDragEnd}
+                                handleDragMove={handleDragMove}
+                                onMouseMove={handleMouseMove}
+                                isAvailableMove={availableMoves.some(move =>
+                                    move.x === cell.x && move.y === cell.y
+                                )}
+                                isLastMove={lastMove.from?.id === cell.id || lastMove.to?.id === cell.id}
+                                isCaptureMove={captureMoves.some(move =>
+                                    move.x === cell.x && move.y === cell.y
+                                )}
+                                isHovered={hoveredCell !== null &&
+                                    hoveredCell.x === cell.x &&
+                                    hoveredCell.y === cell.y}
+                                isSelected={selectedCell?.cellId === cell.id}
+                                isActiveCaptureFigure={activeCaptureFigure}
+                                hasForcedCapture={hasForcedCapture}
+                                isAnimating={isAnimating}
+                                onAnimationComplete={handleAnimationComplete}
+                                {...targetPos}
+                            />
+                        })
+                    }
+                </Layer>
+
+
+                <Layer ref={tempLayerRef} id="temp-layer" />
+            </Stage >
+        </div>
     );
 }
 

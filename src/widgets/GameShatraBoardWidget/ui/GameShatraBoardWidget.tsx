@@ -33,21 +33,27 @@ const GameShatraBoardWidget: React.FC<GameShatraBoardWidgetProps> = ({
 
     return (
         <>
+            <div className='grid grid-cols-[1fr_1fr_1fr] gap-15 items-center'>
 
-            <FlipBoardButton
-                board={shatraBoard}
-                onFlip={(flippedBoard) => {
-                    setShatraBoard(flippedBoard);
-                }}
-            />
-            <MoveHistory moves={moves} />
+                <div></div>
+                {/* 
+                <FlipBoardButton
+                    board={shatraBoard}
+                    onFlip={(flippedBoard) => {
+                        setShatraBoard(flippedBoard);
+                    }}
+                /> */}
+                <ShatraBoard shatraBoard={shatraBoard}
+                    setShatraBoard={setShatraBoard}
+                    activeCaptureFigure={activeCaptureFigure}
+                    setActiveCaptureFigure={setActiveCaptureFigure}
+                    flipKey={flipKey}
+                />
 
-            <ShatraBoard shatraBoard={shatraBoard}
-                setShatraBoard={setShatraBoard}
-                activeCaptureFigure={activeCaptureFigure}
-                setActiveCaptureFigure={setActiveCaptureFigure}
-                flipKey={flipKey}
-            />
+                <MoveHistory moves={moves} />
+            </div>
+
+
         </>
     );
 }

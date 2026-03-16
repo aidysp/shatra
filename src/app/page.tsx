@@ -38,16 +38,16 @@ export default function Home() {
     <div className="">
       <FlipBoardProvider>
         <div className='flex justify-center items-center w-[100%] h-[100vh]'>
-          <div className='w-[280px] h-[560px] max-w-[100%] max-h-[100%]  overflow-hidden'>
+          {/* <div className='w-[280px] h-[560px] max-w-[100%] max-h-[100%]  overflow-hidden'> */}
 
-            <GameShatraBoardWidget
-              shatraBoard={shatraBoard}
-              setShatraBoard={setShatraBoard}
-              moves={moves}
-              activeCaptureFigure={activeCaptureFigure}
-              setActiveCaptureFigure={setActiveCaptureFigure}
-            />
-          </div>
+          <GameShatraBoardWidget
+            shatraBoard={shatraBoard}
+            setShatraBoard={setShatraBoard}
+            moves={moves}
+            activeCaptureFigure={activeCaptureFigure}
+            setActiveCaptureFigure={setActiveCaptureFigure}
+          />
+          {/* </div> */}
 
         </div>
       </FlipBoardProvider>
