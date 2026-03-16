@@ -229,6 +229,7 @@ export const useDragAndDrop = ({
                 const tempFrom = tempBoard.getCellById(fromCell.id)!;
 
                 if (tempBoard.makeMove(tempFrom, tempFrom)) {
+                    tempBoard.recordMove(tempFrom, tempFrom);
                     setShatraBoard(tempBoard);
                     setLastMove({
                         from: fromCell,
@@ -274,8 +275,10 @@ export const useDragAndDrop = ({
                         const tempTo = tempBoard.getCellById(toCell.id)!;
 
                         if (isAvailable) {
+                            tempBoard.recordMove(tempFrom, tempTo);
                             moveSuccess = tempBoard.makeNormalMove(tempFrom, tempTo);
                         } else {
+                            tempBoard.recordMove(tempFrom, tempTo);
                             moveSuccess = tempBoard.makeMove(tempFrom, tempTo);
                         }
 

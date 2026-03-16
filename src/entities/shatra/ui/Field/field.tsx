@@ -1,10 +1,11 @@
 'use client'
 
-import { ShatraCell as Cell } from '@/entities/shatra/cell/model/ShatraCell';
-import { Colors } from '@/entities/shatra/config/Colors';
-import { KonvaEventObject } from 'konva/lib/Node';
 import React from 'react';
 import { Circle, Group, Rect, Text } from 'react-konva';
+import { KonvaEventObject } from 'konva/lib/Node';
+
+import { Colors } from '@/entities/shatra/config/Colors';
+import { ShatraCell } from '@/entities/shatra/cell';
 
 interface FieldProps {
   id: number;
@@ -17,17 +18,26 @@ interface FieldProps {
   isCaptureMove?: boolean;
   isHovered?: boolean;
   isSelected?: boolean;
-  isActiveCaptureFigure?: Cell | null;
+  isActiveCaptureFigure?: ShatraCell | null;
   onClick?: () => void;
   onMouseMove?: (e: KonvaEventObject<MouseEvent>) => void;
 }
 
-const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMove, isLastMove, isCaptureMove, isHovered, isSelected, onClick, onMouseMove }) => {
+const Field: React.FC<FieldProps> = ({
+  id,
+  x,
+  y,
+  color,
+  children,
+  isAvailableMove,
+  isLastMove,
+  isCaptureMove,
+  isHovered,
+  isSelected,
+  onClick,
+  onMouseMove
+}) => {
   const cellSize = 40;
-
-
-
-
 
   return (
     <Group
@@ -37,8 +47,6 @@ const Field: React.FC<FieldProps> = ({ id, x, y, color, children, isAvailableMov
       onTap={onClick}
       onMouseMove={onMouseMove}
     >
-
-
 
       <Rect
         x={0}

@@ -1,8 +1,8 @@
 export {
     ShatraBoard,
     ShatraCell,
-    Colors,
     Player,
+    Colors,
     GameState,
     Figures
 } from './shatra';

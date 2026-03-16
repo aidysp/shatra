@@ -58,9 +58,9 @@ export const useBoardClick = ({
             return;
         }
 
+        startAnimation(from.figure!, from, to);
         shatraBoard.recordMove(from, to);
 
-        startAnimation(from.figure!, from, to);
         setAvailableMoves([]);
         setCaptureMoves([]);
         clearSelection();

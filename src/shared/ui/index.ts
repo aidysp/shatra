@@ -1,1 +1,0 @@
-export { BoardCell, Field, FigureLogo } from './board';

@@ -1,4 +1,6 @@
-import { ShatraBoard as Board, Figures, Player, ShatraCell } from "@/entities"
+import { ShatraBoard as Board } from "@/entities/shatra/board";
+import { ShatraCell } from '@/entities/shatra/cell';
+import { Figures, Player, } from '@/entities/shatra/config';
 import { Shatra } from "../model/Shatra";
 
 

@@ -1,13 +1,12 @@
-import { Field } from "@/shared/ui/board/field/field";
-import { FigureLogo } from '@/shared/ui/board/figure/figure';
-
-import { ShatraCell as Cell } from "@/entities/shatra/cell/model/ShatraCell";
-import { Colors } from "@/entities/shatra/config/Colors";
-import { Figures } from "@/entities/shatra/config/Figures";
-import { Player } from "@/entities/shatra/config/Player";
 
 import { KonvaEventObject } from "konva/lib/Node";
 
+import { ShatraCell as Cell } from "@/entities/shatra/cell/model/ShatraCell";
+import { Colors } from "@/entities/shatra/config/Colors"
+import { Figures } from "@/entities/shatra/config/Figures";
+import { Player } from "@/entities/shatra/config/Player";
+import { Field } from "@/entities/shatra/ui/Field/field";
+import { FigureLogo } from "@/entities/shatra/ui/Figure/figure";
 
 
 const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {

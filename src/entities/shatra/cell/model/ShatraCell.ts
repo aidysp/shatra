@@ -1,4 +1,4 @@
-import { Colors } from "../../config/Colors";
+import { Colors } from "../../config";
 import { Player } from "../../config/Player";
 
 import { Figure, Shatra } from "../../figure";
