@@ -1,7 +1,7 @@
 # Altai Shatra
 
 <p align="center">
-  <img src="/public/intro.png" width="200" alt="Shatra Logo">
+  <img src="/public/intro.png" width="400" alt="Shatra Logo">
 </p>
 
 <p align="center">
