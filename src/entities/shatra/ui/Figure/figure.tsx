@@ -39,7 +39,6 @@ const blackBaatyr = `<svg width="46" height="46" viewBox="0 0 46 46" fill="none"
 
 
 
-
 const FigureLogo: React.FC<FigureProps> = ({
   color,
   figure,

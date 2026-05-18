@@ -1,5 +1,5 @@
 import { Baatyr, Biy, Figure, Shatra } from "../../figure";
-import { ShatraCell as Cell, GameState, Player } from "@/entities/shatra";
+import { ShatraCell as Cell, Figures, GameState, Player } from "@/entities/shatra";
 import { Colors } from "@/entities/shatra";
 
 export interface MoveRecord {
@@ -1075,6 +1075,25 @@ export class ShatraBoard {
 
 
     private applyMove(from: Cell, to: Cell, options?: { skipSwitch?: boolean; skipReserveUpdate?: boolean }): void {
+
+        if (from.figure?.logo == Figures.Biy && to === from) {
+
+            this.lastMoves[this.currentPlayer] = {
+                from,
+                to,
+                figureId: to.figure!.id
+            };
+
+            if (!options?.skipSwitch) {
+                this.switchPlayer();
+            }
+
+            if (!options?.skipReserveUpdate) {
+                this.updateReserveOrderState();
+            }
+
+            return;
+        }
 
         to.figure = from.figure;
         from.figure = null;
